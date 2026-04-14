@@ -32,11 +32,19 @@
   .card-summary .name-col { flex: 1.5; min-width: 0; }
   .card-summary .name-col .name { font-size: 0.95rem; font-weight: 600; }
   .card-summary .name-col .role { font-size: 0.75rem; color: #868e96; }
+  .card-summary .cs-col { flex: 0.5; text-align: center; }
   .card-summary .tests-col { flex: 1.5; font-size: 0.82rem; }
-  .card-summary .clout-col { flex: 2; font-size: 0.78rem; color: #495057; line-height: 1.3; overflow: hidden; max-height: 3.9em; }
-  .card-summary .cs-col { flex: 0.6; text-align: center; }
-  .card-summary .links-col { flex: 0.8; }
+  .card-summary .clout-col { flex: 2.5; font-size: 0.78rem; color: #495057; line-height: 1.3; overflow: hidden; max-height: 3.9em; }
+  .card-summary .lever-col { flex: 0.4; text-align: center; }
   .card-summary .action-col { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
+
+  .col-headers { display: flex; align-items: center; gap: 16px; padding: 8px 20px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; color: #868e96; font-weight: 600; border-bottom: 2px solid #dee2e6; background: #f8f9fa; border-radius: 8px 8px 0 0; margin-top: 8px; }
+  .col-headers .name-col { flex: 1.5; }
+  .col-headers .cs-col { flex: 0.5; text-align: center; }
+  .col-headers .tests-col { flex: 1.5; }
+  .col-headers .clout-col { flex: 2.5; }
+  .col-headers .lever-col { flex: 0.4; text-align: center; }
+  .col-headers .action-col { flex: 1; text-align: right; padding-right: 24px; }
 
   /* Action dropdown */
   .action-trigger { padding: 5px 14px; border-radius: 6px; border: 1px solid #364fc7; background: #fff; color: #364fc7; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
@@ -337,6 +345,7 @@ async function loadPacket() {
   for (const c of candidates) {
     if (c.tier !== lastTier) {
       html += `<div class="tier-section"><div class="tier-label" style="color:${tierColors[c.tier]}">${tierLabels[c.tier]} (${tiers[c.tier]})</div></div>`;
+      html += `<div class="col-headers"><div class="name-col">Candidate</div><div class="cs-col">CS</div><div class="tests-col">Tests</div><div class="clout-col">Clout Notes</div><div class="lever-col">Lever</div><div class="action-col">Action</div></div>`;
       lastTier = c.tier;
     }
 
@@ -364,9 +373,7 @@ async function loadPacket() {
       cloutSummary = '<span style="color:#adb5bd">\u2014</span>';
     }
 
-    // Links
-    let linksHtml = links.slice(0,3).map(l => linkPill(l)).join('');
-    if (c.lever_id) linksHtml += `<a href="${leverUrl}" target="_blank" class="link-pill">Lever</a>`;
+    // Links (shown in detail section only, except Lever in summary)
 
     // Action column
     let actionHtml = '';
@@ -434,13 +441,15 @@ async function loadPacket() {
       </div>`;
     }
 
+    const leverLink = c.lever_id ? `<a href="${leverUrl}" target="_blank" class="link-pill" onclick="event.stopPropagation()">Lever</a>` : '--';
+
     html += `<div class="card" id="card-${c.id}">
       <div class="card-summary" onclick="toggleCard('${c.id}')">
         <div class="name-col"><div class="name">${esc(c.name)}<span id="dtag-${c.id}">${decTag}</span></div><div class="role">${esc(c.role||'')}</div></div>
+        <div class="cs-col">${csBadge(c.codesignal)}</div>
         <div class="tests-col">${testBadges}</div>
         <div class="clout-col">${cloutSummary}</div>
-        <div class="cs-col">${csBadge(c.codesignal)}</div>
-        <div class="links-col">${linksHtml}</div>
+        <div class="lever-col">${leverLink}</div>
         <div class="action-col">${actionHtml}<span class="expand-icon" style="margin-left:6px">\u25B6</span></div>
       </div>
       ${actionPanelHtml}
