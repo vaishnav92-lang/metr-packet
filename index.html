@@ -29,13 +29,27 @@
   .card { background: #fff; border-radius: 8px; border: 1px solid #e9ecef; margin-top: 10px; overflow: hidden; }
   .card-summary { padding: 14px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; }
   .card-summary:hover { background: #f8f9fa; }
-  .card-summary .name-col { flex: 2; min-width: 0; }
+  .card-summary .name-col { flex: 1.5; min-width: 0; }
   .card-summary .name-col .name { font-size: 0.95rem; font-weight: 600; }
   .card-summary .name-col .role { font-size: 0.75rem; color: #868e96; }
-  .card-summary .tests-col { flex: 2; font-size: 0.82rem; }
-  .card-summary .cs-col { flex: 0.7; text-align: center; }
-  .card-summary .links-col { flex: 1; }
-  .card-summary .action-col { flex: 1.5; display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+  .card-summary .tests-col { flex: 1.5; font-size: 0.82rem; }
+  .card-summary .clout-col { flex: 2; font-size: 0.78rem; color: #495057; line-height: 1.3; overflow: hidden; max-height: 3.9em; }
+  .card-summary .cs-col { flex: 0.6; text-align: center; }
+  .card-summary .links-col { flex: 0.8; }
+  .card-summary .action-col { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
+
+  /* Action dropdown */
+  .action-trigger { padding: 5px 14px; border-radius: 6px; border: 1px solid #364fc7; background: #fff; color: #364fc7; cursor: pointer; font-size: 0.78rem; font-weight: 600; }
+  .action-trigger:hover { background: #364fc7; color: #fff; }
+  .action-trigger.decided { border-color: transparent; color: #fff; }
+  .action-trigger.decided-interview { background: #2b8a3e; }
+  .action-trigger.decided-reject { background: #c92a2a; }
+  .action-trigger.decided-hold { background: #e67700; }
+  .action-panel { display: none; padding: 12px 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; }
+  .action-panel.visible { display: block; }
+  .action-panel .action-buttons { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+  .action-panel .action-label { font-size: 0.82rem; color: #495057; font-weight: 500; margin-right: 8px; }
+  .waiting-label { font-size: 0.75rem; color: #adb5bd; font-style: italic; }
   .expand-icon { font-size: 0.75rem; color: #adb5bd; transition: transform 0.2s; margin-left: 8px; }
   .card.expanded .expand-icon { transform: rotate(90deg); }
 
@@ -198,6 +212,12 @@ function toggleCard(id) {
   document.getElementById(`card-${id}`).classList.toggle('expanded');
 }
 
+function toggleAction(id, e) {
+  if (e) e.stopPropagation();
+  const panel = document.getElementById(`action-panel-${id}`);
+  if (panel) panel.classList.toggle('visible');
+}
+
 function toggleNotes(btn) {
   const notes = btn.previousElementSibling;
   if (notes.classList.contains('collapsed')) {
@@ -211,24 +231,28 @@ function toggleNotes(btn) {
 
 function decide(candId, decision, name, e) {
   if (e) e.stopPropagation();
+  const trigger = document.querySelector(`#card-${candId} .action-trigger`);
   if (decisions[candId] && decisions[candId].decision === decision) {
+    // Toggle off
     delete decisions[candId];
     document.querySelectorAll(`#card-${candId} .btn`).forEach(b => b.classList.remove('active'));
-    const noteBox = document.getElementById(`note-${candId}`);
-    if (noteBox) noteBox.classList.remove('visible');
     const tag = document.getElementById(`dtag-${candId}`);
     if (tag) tag.innerHTML = '';
+    if (trigger) { trigger.className = 'action-trigger'; trigger.textContent = 'Take Action'; }
     updateFooter();
     return;
   }
   decisions[candId] = { decision, name, notes: '' };
+  // Preserve existing note if switching decision
+  const ta = document.getElementById(`note-input-${candId}`);
+  if (ta) decisions[candId].notes = ta.value;
   document.querySelectorAll(`#card-${candId} .btn`).forEach(b => b.classList.remove('active'));
   const activeBtn = document.querySelector(`#card-${candId} .btn-${decision}`);
   if (activeBtn) activeBtn.classList.add('active');
-  // Show note field
-  const noteBox = document.getElementById(`note-${candId}`);
-  if (noteBox) noteBox.classList.add('visible');
-  // Update tag in summary
+  // Update trigger button
+  const edColors = {interview:'decided-interview',reject:'decided-reject',hold:'decided-hold'};
+  if (trigger) { trigger.className = `action-trigger decided ${edColors[decision]}`; trigger.textContent = decision.toUpperCase(); }
+  // Update tag
   const tag = document.getElementById(`dtag-${candId}`);
   const tagCls = {interview:'dt-interview',reject:'dt-reject',hold:'dt-hold'};
   if (tag) tag.innerHTML = `<span class="decided-tag ${tagCls[decision]}">${decision.toUpperCase()}</span>`;
@@ -332,21 +356,37 @@ async function loadPacket() {
       testBadges += `<div><span style="font-size:0.78rem;color:#495057;margin-right:3px">${short}:</span>${badge}</div>`;
     }
 
+    // Clout notes — extract first review notes, truncated for summary
+    let cloutSummary = '';
+    for (const t of cTests) {
+      const reviews = JSON.parse(t.reviews||'[]');
+      const cloutReview = reviews.find(r => r.reviewer && r.reviewer.startsWith('Clout'));
+      if (cloutReview && cloutReview.notes) {
+        const firstLine = cloutReview.notes.split('\n').filter(l => l.trim()).slice(0, 2).join(' ');
+        cloutSummary += firstLine.slice(0, 120) + (firstLine.length > 120 ? '...' : '') + ' ';
+      }
+    }
+    if (!cloutSummary) cloutSummary = '<span style="color:#adb5bd">No Clout review yet</span>';
+
     // Links
     let linksHtml = links.slice(0,3).map(l => linkPill(l)).join('');
     if (c.lever_id) linksHtml += `<a href="${leverUrl}" target="_blank" class="link-pill">Lever</a>`;
 
-    // Decision buttons (only tier 0)
+    // Action column
     let actionHtml = '';
+    const ed = existingDec?.decision || '';
     if (c.tier === 0) {
-      const ed = existingDec?.decision || '';
-      actionHtml = `
-        <button class="btn btn-interview ${ed==='interview'?'active':''}" onclick="decide('${c.id}','interview','${esc(c.name).replace(/'/g,"\\'")}',event)">Interview</button>
-        <button class="btn btn-reject ${ed==='reject'?'active':''}" onclick="decide('${c.id}','reject','${esc(c.name).replace(/'/g,"\\'")}',event)">Reject</button>
-        <button class="btn btn-hold ${ed==='hold'?'active':''}" onclick="decide('${c.id}','hold','${esc(c.name).replace(/'/g,"\\'")}',event)">Hold</button>`;
-      if (existingDec) {
-        decisions[c.id] = { decision: existingDec.decision, name: c.name, notes: existingDec.notes || '' };
+      if (ed) {
+        const edColors = {interview:'decided-interview',reject:'decided-reject',hold:'decided-hold'};
+        actionHtml = `<button class="action-trigger decided ${edColors[ed]}" onclick="toggleAction('${c.id}',event)">${ed.toUpperCase()}</button>`;
+        decisions[c.id] = { decision: ed, name: c.name, notes: existingDec?.notes || '' };
+      } else {
+        actionHtml = `<button class="action-trigger" onclick="toggleAction('${c.id}',event)">Take Action</button>`;
       }
+    } else if (c.tier === 1) {
+      actionHtml = '<span class="waiting-label">Needs grading</span>';
+    } else {
+      actionHtml = '<span class="waiting-label">Needs submissions</span>';
     }
 
     // Detail content
@@ -382,21 +422,32 @@ async function loadPacket() {
       detailHtml += `<div class="lever-notes"><div class="ln-label">Lever Notes</div>${esc(c.lever_notes)}</div>`;
     }
 
-    // Decision note field (only tier 0)
+    // Action panel (only tier 0)
+    let actionPanelHtml = '';
     if (c.tier === 0) {
       const existingNote = existingDec?.notes || '';
-      const noteVisible = existingDec ? 'visible' : '';
-      detailHtml += `<div class="decision-note ${noteVisible}" id="note-${c.id}"><textarea id="note-input-${c.id}" placeholder="Optional note (e.g., 'interview but probe X', 'reject \u2014 too junior')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea></div>`;
+      const panelVisible = existingDec ? 'visible' : '';
+      actionPanelHtml = `<div class="action-panel ${panelVisible}" id="action-panel-${c.id}">
+        <div class="action-buttons">
+          <span class="action-label">Decision:</span>
+          <button class="btn btn-interview ${ed==='interview'?'active':''}" onclick="decide('${c.id}','interview','${esc(c.name).replace(/'/g,"\\'")}',event)">Interview</button>
+          <button class="btn btn-reject ${ed==='reject'?'active':''}" onclick="decide('${c.id}','reject','${esc(c.name).replace(/'/g,"\\'")}',event)">Reject</button>
+          <button class="btn btn-hold ${ed==='hold'?'active':''}" onclick="decide('${c.id}','hold','${esc(c.name).replace(/'/g,"\\'")}',event)">Hold</button>
+        </div>
+        <textarea id="note-input-${c.id}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:6px;font-size:0.82rem;font-family:inherit;resize:vertical;min-height:36px" placeholder="Optional note for Rae (e.g., 'probe X in interview', 'reject \u2014 too junior')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea>
+      </div>`;
     }
 
     html += `<div class="card" id="card-${c.id}">
       <div class="card-summary" onclick="toggleCard('${c.id}')">
         <div class="name-col"><div class="name">${esc(c.name)}<span id="dtag-${c.id}">${decTag}</span></div><div class="role">${esc(c.role||'')}</div></div>
         <div class="tests-col">${testBadges}</div>
+        <div class="clout-col">${cloutSummary}</div>
         <div class="cs-col">${csBadge(c.codesignal)}</div>
         <div class="links-col">${linksHtml}</div>
-        <div class="action-col">${actionHtml}<span class="expand-icon">\u25B6</span></div>
+        <div class="action-col">${actionHtml}<span class="expand-icon" style="margin-left:6px">\u25B6</span></div>
       </div>
+      ${actionPanelHtml}
       <div class="card-detail">${detailHtml}</div>
     </div>`;
   }
