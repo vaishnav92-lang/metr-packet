@@ -321,13 +321,13 @@ async function loadPacket() {
 
   // Summary table
   let tableHtml = `<table class="summary-table"><thead><tr>
-    <th>Candidate</th><th>Tests & Ratings</th><th style="text-align:center">CodeSignal</th><th>Links</th><th>Source</th>
+    <th>Candidate</th><th>Tests & Ratings</th><th style="text-align:center">CodeSignal</th><th>Links</th>
   </tr></thead><tbody>`;
 
   let lastTier = null;
   for (const c of candidates) {
     if (c.tier !== lastTier) {
-      tableHtml += `<tr class="tier-header"><td colspan="5" style="color:${tierColors[c.tier]}">${tierLabels[c.tier]} (${tiers[c.tier]})</td></tr>`;
+      tableHtml += `<tr class="tier-header"><td colspan="4" style="color:${tierColors[c.tier]}">${tierLabels[c.tier]} (${tiers[c.tier]})</td></tr>`;
       lastTier = c.tier;
     }
     const anchor = c.name.toLowerCase().replace(/\s/g,'_').replace(/'/g,'');
@@ -351,8 +351,7 @@ async function loadPacket() {
       <td><a href="#${anchor}" style="font-weight:600;font-size:0.88rem">${esc(c.name)}</a><span id="dtag-${c.id}">${decTag}</span><br><span style="font-size:0.75rem;color:#868e96">${esc(c.role||'')}</span></td>
       <td>${testCells}</td>
       <td style="text-align:center">${csBadge(c.codesignal)}</td>
-      <td>${linksHtml}</td>
-      <td style="font-size:0.82rem;color:#868e96">${esc(c.source||'')}<br>${esc(c.added_date||'')}</td>
+      <td>${linksHtml} ${c.lever_id ? `<a href="https://hire.lever.co/candidates/${c.lever_id}" target="_blank" class="link-pill">Lever</a>` : ''}</td>
     </tr>`;
   }
   tableHtml += '</tbody></table>';
