@@ -356,22 +356,13 @@ async function loadPacket() {
       testBadges += `<div><span style="font-size:0.78rem;color:#495057;margin-right:3px">${short}:</span>${badge}</div>`;
     }
 
-    // Clout notes — prefer "Note to Rae" from Lever, fallback to First Review grading notes
+    // Clout notes — only show "Note to Rae" from Lever, nothing else
     let cloutSummary = '';
     if (c.clout_note) {
       cloutSummary = esc(c.clout_note.slice(0, 150)) + (c.clout_note.length > 150 ? '...' : '');
     } else {
-      // Fallback: first line of First Review grading notes
-      for (const t of cTests) {
-        const reviews = JSON.parse(t.reviews||'[]');
-        const cloutReview = reviews.find(r => r.reviewer && r.reviewer.startsWith('Clout'));
-        if (cloutReview && cloutReview.notes) {
-          const firstLine = cloutReview.notes.split('\n').filter(l => l.trim()).slice(0, 2).join(' ');
-          cloutSummary += esc(firstLine.slice(0, 120)) + (firstLine.length > 120 ? '...' : '') + ' ';
-        }
-      }
+      cloutSummary = '<span style="color:#adb5bd">\u2014</span>';
     }
-    if (!cloutSummary) cloutSummary = '<span style="color:#adb5bd">\u2014</span>';
 
     // Links
     let linksHtml = links.slice(0,3).map(l => linkPill(l)).join('');
