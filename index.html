@@ -143,6 +143,17 @@ async function insert(table, data) {
   return resp.json();
 }
 
+async function del(table, params) {
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    method: 'DELETE',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+    }
+  });
+  return resp;
+}
+
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
 function trunc(s, n=300) { return s && s.length > n ? s.slice(0,n)+'...' : (s||''); }
 
@@ -243,15 +254,19 @@ function updatePanel() {
 async function submitDecisions() {
   const entries = Object.entries(decisions);
   if (!entries.length) return;
-  // Get packet_id from first candidate
   const packetId = candidatesData[0]?.packet_id;
-  const rows = entries.map(([candId, d]) => ({
-    candidate_id: candId,
-    packet_id: packetId,
-    decision: d.decision,
-    decided_by: 'rae@metr.org'
-  }));
   try {
+    // Delete existing unexecuted decisions for these candidates
+    for (const [candId] of entries) {
+      await del('decisions', `candidate_id=eq.${candId}&executed=eq.false`);
+    }
+    // Insert fresh decisions
+    const rows = entries.map(([candId, d]) => ({
+      candidate_id: candId,
+      packet_id: packetId,
+      decision: d.decision,
+      decided_by: 'rae@metr.org'
+    }));
     await insert('decisions', rows);
     document.getElementById('submit-status').innerHTML = '<div class="submit-ok">Decisions saved successfully.</div>';
   } catch(e) {
