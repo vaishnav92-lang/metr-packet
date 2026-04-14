@@ -9,46 +9,68 @@
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; }
   a { color: #364fc7; text-decoration: none; }
   a:hover { text-decoration: underline; }
+
   .header { background: #1a1a2e; color: #fff; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
   .header h1 { font-size: 1.3rem; font-weight: 600; }
   .header .meta { font-size: 0.85rem; color: #adb5bd; }
+
   .stats { display: flex; gap: 20px; padding: 16px 32px; }
   .stat { background: #fff; border-radius: 8px; padding: 14px 20px; border: 1px solid #e9ecef; flex: 1; text-align: center; }
   .stat .num { font-size: 1.8rem; font-weight: 700; }
   .stat .label { font-size: 0.78rem; color: #868e96; text-transform: uppercase; letter-spacing: 0.04em; }
-  .container { padding: 0 32px 32px; }
-  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e9ecef; }
-  .summary-table th { text-align: left; padding: 10px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: #868e96; border-bottom: 2px solid #dee2e6; background: #f8f9fa; }
-  .summary-table td { padding: 8px 10px; border-bottom: 1px solid #f1f3f5; }
-  .summary-table tr:hover { background: #f8f9fa; }
-  .tier-header td { padding: 12px 10px 6px; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #dee2e6; }
-  .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; }
+
+  .container { padding: 0 32px 80px; }
+
+  /* Tier sections */
+  .tier-section { margin-top: 24px; }
+  .tier-label { padding: 8px 0; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #dee2e6; margin-bottom: 8px; }
+
+  /* Candidate cards - unified (no separate summary/detail) */
+  .card { background: #fff; border-radius: 8px; border: 1px solid #e9ecef; margin-top: 10px; overflow: hidden; }
+  .card-summary { padding: 14px 20px; display: flex; align-items: center; gap: 16px; cursor: pointer; }
+  .card-summary:hover { background: #f8f9fa; }
+  .card-summary .name-col { flex: 2; min-width: 0; }
+  .card-summary .name-col .name { font-size: 0.95rem; font-weight: 600; }
+  .card-summary .name-col .role { font-size: 0.75rem; color: #868e96; }
+  .card-summary .tests-col { flex: 2; font-size: 0.82rem; }
+  .card-summary .cs-col { flex: 0.7; text-align: center; }
+  .card-summary .links-col { flex: 1; }
+  .card-summary .action-col { flex: 1.5; display: flex; gap: 6px; justify-content: flex-end; align-items: center; }
+  .expand-icon { font-size: 0.75rem; color: #adb5bd; transition: transform 0.2s; margin-left: 8px; }
+  .card.expanded .expand-icon { transform: rotate(90deg); }
+
+  .card-detail { display: none; padding: 0 20px 16px; border-top: 1px solid #f1f3f5; }
+  .card.expanded .card-detail { display: block; }
+
+  /* Badges */
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.73rem; font-weight: 500; }
   .b-above { background: #d3f9d8; color: #2b8a3e; }
   .b-bord-above { background: #fff3bf; color: #e67700; }
   .b-bord-below { background: #ffe8cc; color: #d9480f; }
   .b-below { background: #ffe3e3; color: #c92a2a; }
-  .b-ungraded { font-size: 0.75rem; color: #adb5bd; }
+  .b-ungraded { font-size: 0.73rem; color: #adb5bd; }
+  .badge-full { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; }
   .cs-green { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; background: #d3f9d8; color: #2b8a3e; }
   .cs-yellow { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; background: #fff3bf; color: #e67700; }
   .cs-red { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; background: #ffe3e3; color: #c92a2a; }
-  .link-pill { font-size: 0.75rem; color: #364fc7; margin-right: 6px; padding: 1px 4px; background: #f1f3f5; border-radius: 3px; text-decoration: none; }
-  /* Detail cards */
-  .detail-section { padding: 16px 32px 32px; }
-  .card { background: #fff; border-radius: 8px; border: 1px solid #e9ecef; margin-top: 16px; overflow: hidden; }
-  .card-hdr { padding: 16px 20px; border-bottom: 1px solid #f1f3f5; }
-  .card-body { padding: 16px 20px; }
+  .link-pill { font-size: 0.73rem; color: #364fc7; margin-right: 4px; padding: 1px 4px; background: #f1f3f5; border-radius: 3px; text-decoration: none; }
+
+  /* Test blocks in detail */
   .test-hdr { margin-top: 10px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px 6px 0 0; border: 1px solid #e9ecef; border-bottom: none; display: flex; justify-content: space-between; align-items: center; }
   .test-body { border: 1px solid #e9ecef; border-radius: 0 0 6px 6px; margin-bottom: 8px; }
   .rev-row { padding: 8px 12px; border-bottom: 1px solid #f1f3f5; }
   .rev-row:last-child { border-bottom: none; }
   .rev-hdr { display: flex; justify-content: space-between; align-items: center; }
   .rev-name { font-size: 0.82rem; font-weight: 600; color: #495057; }
-  .rev-notes { font-size: 0.82rem; color: #495057; line-height: 1.4; margin-top: 4px; max-height: 120px; overflow: hidden; }
-  .badge-full { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; }
+  .rev-notes { font-size: 0.82rem; color: #495057; line-height: 1.4; margin-top: 4px; }
+  .rev-notes.collapsed { max-height: 80px; overflow: hidden; position: relative; }
+  .rev-notes.collapsed::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 30px; background: linear-gradient(transparent, white); }
+  .show-more { font-size: 0.78rem; color: #364fc7; cursor: pointer; margin-top: 2px; display: inline-block; }
+  .lever-notes { background: #f8f9fa; border-radius: 6px; padding: 10px 14px; margin-top: 8px; font-size: 0.82rem; color: #495057; }
+  .lever-notes .ln-label { font-size: 0.72rem; text-transform: uppercase; color: #868e96; margin-bottom: 4px; letter-spacing: 0.03em; }
+
   /* Decision buttons */
-  .decision-bar { margin-top: 12px; padding: 12px 14px; background: #f8f9fa; border-radius: 6px; display: flex; gap: 8px; align-items: center; }
-  .decision-bar .dlabel { font-size: 0.82rem; color: #495057; font-weight: 500; margin-right: 8px; }
-  .btn { padding: 6px 16px; border-radius: 6px; border: 1px solid #dee2e6; background: #fff; cursor: pointer; font-size: 0.82rem; font-weight: 500; transition: all 0.15s; }
+  .btn { padding: 4px 12px; border-radius: 6px; border: 1px solid #dee2e6; background: #fff; cursor: pointer; font-size: 0.78rem; font-weight: 500; transition: all 0.15s; }
   .btn:hover { border-color: #adb5bd; }
   .btn-interview { color: #2b8a3e; border-color: #2b8a3e; }
   .btn-interview:hover, .btn-interview.active { background: #2b8a3e; color: #fff; }
@@ -56,29 +78,28 @@
   .btn-reject:hover, .btn-reject.active { background: #c92a2a; color: #fff; }
   .btn-hold { color: #e67700; border-color: #e67700; }
   .btn-hold:hover, .btn-hold.active { background: #e67700; color: #fff; }
-  .action-log { margin-top: 4px; padding: 8px 14px; border-radius: 4px; font-size: 0.78rem; font-family: 'SF Mono', monospace; display: none; }
-  .action-log.visible { display: block; }
-  .al-interview { background: #e7f5ff; color: #1864ab; }
-  .al-reject { background: #fff5f5; color: #c92a2a; }
-  .al-hold { background: #fff9db; color: #664d03; }
-  .decided-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; margin-left: 8px; }
+
+  .decision-note { margin-top: 8px; display: none; }
+  .decision-note.visible { display: block; }
+  .decision-note textarea { width: 100%; padding: 8px; border: 1px solid #dee2e6; border-radius: 6px; font-size: 0.82rem; font-family: inherit; resize: vertical; min-height: 40px; }
+  .decision-note textarea::placeholder { color: #adb5bd; }
+
+  .decided-tag { display: inline-block; padding: 1px 8px; border-radius: 10px; font-size: 0.73rem; font-weight: 600; margin-left: 6px; }
   .dt-interview { background: #d3f9d8; color: #2b8a3e; }
   .dt-reject { background: #ffe3e3; color: #c92a2a; }
   .dt-hold { background: #fff3bf; color: #e67700; }
-  /* Sticky panel */
-  .panel { position: sticky; bottom: 0; background: #1a1a2e; color: #fff; padding: 16px 32px; display: none; border-radius: 8px 8px 0 0; z-index: 100; }
-  .panel.visible { display: block; }
-  .panel h3 { font-size: 0.95rem; margin-bottom: 8px; }
-  .panel-list { font-size: 0.85rem; }
-  .panel-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #2a2a4e; }
-  .panel-item:last-child { border: none; }
-  .submit-btn { margin-top: 12px; padding: 8px 24px; background: #364fc7; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+
+  /* Sticky footer */
+  .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a2e; color: #fff; padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; z-index: 100; font-size: 0.85rem; }
+  .footer-bar .pending { color: #adb5bd; }
+  .footer-bar .pending.has-decisions { color: #fff; }
+  .submit-btn { padding: 8px 20px; background: #364fc7; color: #fff; border: none; border-radius: 6px; font-size: 0.82rem; font-weight: 600; cursor: pointer; }
   .submit-btn:hover { background: #2b3fb0; }
-  .clear-btn { margin-top: 12px; margin-left: 8px; padding: 8px 24px; background: transparent; color: #adb5bd; border: 1px solid #adb5bd; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
-  .submit-ok { margin-top: 8px; padding: 8px 12px; background: #2b8a3e; color: #fff; border-radius: 6px; font-size: 0.85rem; }
+  .submit-btn:disabled { background: #495057; cursor: default; }
+  .clear-btn { padding: 8px 16px; background: transparent; color: #adb5bd; border: 1px solid #495057; border-radius: 6px; font-size: 0.82rem; cursor: pointer; margin-left: 8px; }
+  .submit-ok { color: #2b8a3e; margin-left: 12px; font-size: 0.82rem; }
+
   .loading { text-align: center; padding: 60px; color: #868e96; font-size: 1rem; }
-  .lever-notes { background: #f8f9fa; border-radius: 6px; padding: 10px 14px; margin-top: 8px; font-size: 0.82rem; color: #495057; }
-  .lever-notes .ln-label { font-size: 0.72rem; text-transform: uppercase; color: #868e96; margin-bottom: 4px; letter-spacing: 0.03em; }
 </style>
 </head>
 <body>
@@ -93,26 +114,19 @@
 
 <div class="stats" id="stats-bar"></div>
 
-<div class="container">
-  <div id="summary-table"><div class="loading">Loading packet data...</div></div>
+<div class="container" id="main">
+  <div class="loading">Loading packet data...</div>
 </div>
 
-<div class="detail-section">
-  <h2 style="font-size:1.1rem;font-weight:600;color:#1a1a2e;margin-bottom:4px">Candidate Details</h2>
-  <div style="font-size:0.82rem;color:#868e96;margin-bottom:8px">Click a name in the summary table to jump to their detail.</div>
-  <div id="details"></div>
-</div>
-
-<div class="panel" id="panel">
-  <h3>Pending Decisions</h3>
-  <div class="panel-list" id="panel-list"></div>
-  <button class="submit-btn" onclick="submitDecisions()">Submit Decisions</button>
-  <button class="clear-btn" onclick="clearAll()">Clear All</button>
-  <div id="submit-status"></div>
-</div>
-
-<div style="text-align:center;padding:20px;color:#adb5bd;font-size:0.78rem">
-  Clout Pipeline &middot; Data from Lever + Airtable + CodeSignal API
+<div class="footer-bar">
+  <div>
+    <span class="pending" id="pending-label">0 decisions pending</span>
+    <span class="submit-ok" id="submit-status"></span>
+  </div>
+  <div>
+    <button class="submit-btn" id="submit-btn" disabled onclick="submitDecisions()">Submit Decisions</button>
+    <button class="clear-btn" onclick="clearAll()">Clear</button>
+  </div>
 </div>
 
 <script>
@@ -128,34 +142,21 @@ async function query(table, params = '') {
   });
   return resp.json();
 }
-
 async function insert(table, data) {
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method: 'POST',
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    },
+    method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json', 'Prefer': 'return=representation' },
     body: JSON.stringify(data)
   });
   return resp.json();
 }
-
 async function del(table, params) {
-  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    method: 'DELETE',
-    headers: {
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-    }
+  return fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
   });
-  return resp;
 }
 
 function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
-function trunc(s, n=300) { return s && s.length > n ? s.slice(0,n)+'...' : (s||''); }
 
 function ratingBadge(r, full) {
   if (!r) return full ? '<span style="color:#868e96">--</span>' : '';
@@ -190,65 +191,62 @@ function linkPill(url) {
   return `<a href="${esc(url)}" target="_blank" class="link-pill">${label}</a>`;
 }
 
-const tierLabels = {0: 'Ready for Decision', 1: 'Waiting on Grades', 2: 'Waiting on Submissions'};
-const tierColors = {0: '#2b8a3e', 1: '#e67700', 2: '#868e96'};
+const tierLabels = {0:'Ready for Decision', 1:'Waiting on Grades', 2:'Waiting on Submissions'};
+const tierColors = {0:'#2b8a3e', 1:'#e67700', 2:'#868e96'};
 
-const actionMap = {
-  interview: (name) => [
-    `Lever: Move "${name}" to Hiring Manager Interview stage`,
-    `Email queue: Add to interview scheduling batch`,
-    `Airtable: Mark all tests as Processed`
-  ],
-  reject: (name) => [
-    `Lever: Archive "${name}" (reason: work test performance)`,
-    `Email queue: Add to rejection batch`,
-    `Airtable: Mark all tests as Processed`
-  ],
-  hold: (name) => [
-    `No Lever change for "${name}"`,
-    `Airtable: Add note "Hold per Rae"`,
-    `Flag for next week's packet`
-  ]
-};
-
-function decide(candId, decision, name) {
-  if (decisions[candId] && decisions[candId].decision === decision) {
-    delete decisions[candId];
-    document.querySelectorAll(`[data-cand="${candId}"] .btn`).forEach(b => b.classList.remove('active'));
-    const log = document.getElementById(`al-${candId}`);
-    if (log) log.classList.remove('visible');
-    // Remove decided tag from summary
-    const tag = document.getElementById(`dtag-${candId}`);
-    if (tag) tag.innerHTML = '';
-    updatePanel();
-    return;
-  }
-  decisions[candId] = { decision, name };
-  document.querySelectorAll(`[data-cand="${candId}"] .btn`).forEach(b => b.classList.remove('active'));
-  document.querySelector(`[data-cand="${candId}"] .btn-${decision}`).classList.add('active');
-  const log = document.getElementById(`al-${candId}`);
-  if (log) {
-    log.className = `action-log visible al-${decision}`;
-    log.innerHTML = actionMap[decision](name).map(a => `<div>&rarr; ${a}</div>`).join('');
-  }
-  // Update summary tag
-  const tag = document.getElementById(`dtag-${candId}`);
-  const tagColors = {interview:'dt-interview',reject:'dt-reject',hold:'dt-hold'};
-  if (tag) tag.innerHTML = `<span class="decided-tag ${tagColors[decision]}">${decision.toUpperCase()}</span>`;
-  updatePanel();
+function toggleCard(id) {
+  document.getElementById(`card-${id}`).classList.toggle('expanded');
 }
 
-function updatePanel() {
-  const panel = document.getElementById('panel');
-  const list = document.getElementById('panel-list');
-  const entries = Object.entries(decisions);
-  if (!entries.length) { panel.classList.remove('visible'); return; }
-  panel.classList.add('visible');
-  const colors = {interview:'#2b8a3e',reject:'#c92a2a',hold:'#e67700'};
-  list.innerHTML = entries.map(([id,d]) =>
-    `<div class="panel-item"><span>${esc(d.name)}</span><span style="color:${colors[d.decision]};font-weight:600;text-transform:uppercase">${d.decision}</span></div>`
-  ).join('');
-  document.getElementById('submit-status').innerHTML = '';
+function toggleNotes(btn) {
+  const notes = btn.previousElementSibling;
+  if (notes.classList.contains('collapsed')) {
+    notes.classList.remove('collapsed');
+    btn.textContent = 'show less';
+  } else {
+    notes.classList.add('collapsed');
+    btn.textContent = 'show more';
+  }
+}
+
+function decide(candId, decision, name, e) {
+  if (e) e.stopPropagation();
+  if (decisions[candId] && decisions[candId].decision === decision) {
+    delete decisions[candId];
+    document.querySelectorAll(`#card-${candId} .btn`).forEach(b => b.classList.remove('active'));
+    const noteBox = document.getElementById(`note-${candId}`);
+    if (noteBox) noteBox.classList.remove('visible');
+    const tag = document.getElementById(`dtag-${candId}`);
+    if (tag) tag.innerHTML = '';
+    updateFooter();
+    return;
+  }
+  decisions[candId] = { decision, name, notes: '' };
+  document.querySelectorAll(`#card-${candId} .btn`).forEach(b => b.classList.remove('active'));
+  const activeBtn = document.querySelector(`#card-${candId} .btn-${decision}`);
+  if (activeBtn) activeBtn.classList.add('active');
+  // Show note field
+  const noteBox = document.getElementById(`note-${candId}`);
+  if (noteBox) noteBox.classList.add('visible');
+  // Update tag in summary
+  const tag = document.getElementById(`dtag-${candId}`);
+  const tagCls = {interview:'dt-interview',reject:'dt-reject',hold:'dt-hold'};
+  if (tag) tag.innerHTML = `<span class="decided-tag ${tagCls[decision]}">${decision.toUpperCase()}</span>`;
+  updateFooter();
+}
+
+function updateDecisionNote(candId) {
+  const ta = document.getElementById(`note-input-${candId}`);
+  if (ta && decisions[candId]) decisions[candId].notes = ta.value;
+}
+
+function updateFooter() {
+  const count = Object.keys(decisions).length;
+  const label = document.getElementById('pending-label');
+  label.textContent = count === 0 ? '0 decisions pending' : `${count} decision${count>1?'s':''} pending`;
+  label.classList.toggle('has-decisions', count > 0);
+  document.getElementById('submit-btn').disabled = count === 0;
+  document.getElementById('submit-status').textContent = '';
 }
 
 async function submitDecisions() {
@@ -256,183 +254,155 @@ async function submitDecisions() {
   if (!entries.length) return;
   const packetId = candidatesData[0]?.packet_id;
   try {
-    // Delete existing unexecuted decisions for these candidates
     for (const [candId] of entries) {
       await del('decisions', `candidate_id=eq.${candId}&executed=eq.false`);
     }
-    // Insert fresh decisions
     const rows = entries.map(([candId, d]) => ({
-      candidate_id: candId,
-      packet_id: packetId,
-      decision: d.decision,
-      decided_by: 'rae@metr.org'
+      candidate_id: candId, packet_id: packetId,
+      decision: d.decision, decided_by: 'rae@metr.org',
+      notes: d.notes || null
     }));
     await insert('decisions', rows);
-    document.getElementById('submit-status').innerHTML = '<div class="submit-ok">Decisions saved successfully.</div>';
+    document.getElementById('submit-status').textContent = 'Saved!';
   } catch(e) {
-    document.getElementById('submit-status').innerHTML = `<div style="color:#c92a2a;margin-top:8px">Error: ${e.message}</div>`;
+    document.getElementById('submit-status').textContent = 'Error: ' + e.message;
   }
 }
 
 function clearAll() {
   Object.keys(decisions).forEach(id => {
-    document.querySelectorAll(`[data-cand="${id}"] .btn`).forEach(b => b.classList.remove('active'));
-    const log = document.getElementById(`al-${id}`);
-    if (log) log.classList.remove('visible');
+    document.querySelectorAll(`#card-${id} .btn`).forEach(b => b.classList.remove('active'));
+    const noteBox = document.getElementById(`note-${id}`);
+    if (noteBox) noteBox.classList.remove('visible');
     const tag = document.getElementById(`dtag-${id}`);
     if (tag) tag.innerHTML = '';
   });
   for (const k in decisions) delete decisions[k];
-  updatePanel();
+  updateFooter();
 }
 
 async function loadPacket() {
-  // Get latest packet
   const packets = await query('packets', 'order=created_at.desc&limit=1');
-  if (!packets.length) { document.getElementById('summary-table').innerHTML = '<div class="loading">No packet found.</div>'; return; }
+  if (!packets.length) { document.getElementById('main').innerHTML = '<div class="loading">No packet found.</div>'; return; }
   const packet = packets[0];
-
   document.getElementById('subtitle').textContent = `Week of ${packet.week_label} \u00b7 Prepared by Clout (Vaishnav)`;
 
-  // Get candidates
   const candidates = await query('packet_candidates', `packet_id=eq.${packet.id}&order=tier.asc,name.asc`);
   candidatesData = candidates;
 
-  // Get all tests
   const tests = await query('packet_tests', `candidate_id=in.(${candidates.map(c=>c.id).join(',')})&order=test_type.asc`);
   const testsByCand = {};
   tests.forEach(t => { (testsByCand[t.candidate_id] = testsByCand[t.candidate_id]||[]).push(t); });
 
-  // Get existing decisions
   const existingDecisions = await query('decisions', `packet_id=eq.${packet.id}`);
   const decidedMap = {};
-  existingDecisions.forEach(d => { decidedMap[d.candidate_id] = d.decision; });
+  existingDecisions.forEach(d => { decidedMap[d.candidate_id] = d; });
 
-  // Stats
   const tiers = {0:0,1:0,2:0};
   candidates.forEach(c => tiers[c.tier]++);
   document.getElementById('counts').textContent = `${candidates.length} candidates \u00b7 ${tests.length} work tests`;
   document.getElementById('stats-bar').innerHTML = `
     <div class="stat"><div class="num">${candidates.length}</div><div class="label">Candidates</div></div>
-    <div class="stat"><div class="num">${tests.filter(t => { const r = JSON.parse(t.reviews||'[]'); return r.length > 0; }).length}</div><div class="label">Tests Graded</div></div>
+    <div class="stat"><div class="num">${tests.filter(t => JSON.parse(t.reviews||'[]').length > 0).length}</div><div class="label">Tests Graded</div></div>
     <div class="stat"><div class="num">${tiers[0]}</div><div class="label">Ready for Decision</div></div>
-    <div class="stat"><div class="num">${tiers[1]}</div><div class="label">Waiting on Grades</div></div>
-  `;
+    <div class="stat"><div class="num">${tiers[1]}</div><div class="label">Waiting on Grades</div></div>`;
 
-  // Summary table
-  let tableHtml = `<table class="summary-table"><thead><tr>
-    <th>Candidate</th><th>Tests & Ratings</th><th style="text-align:center">CodeSignal</th><th>Links</th>
-  </tr></thead><tbody>`;
-
+  let html = '';
   let lastTier = null;
+
   for (const c of candidates) {
     if (c.tier !== lastTier) {
-      tableHtml += `<tr class="tier-header"><td colspan="4" style="color:${tierColors[c.tier]}">${tierLabels[c.tier]} (${tiers[c.tier]})</td></tr>`;
+      html += `<div class="tier-section"><div class="tier-label" style="color:${tierColors[c.tier]}">${tierLabels[c.tier]} (${tiers[c.tier]})</div></div>`;
       lastTier = c.tier;
     }
-    const anchor = c.name.toLowerCase().replace(/\s/g,'_').replace(/'/g,'');
-    const cTests = testsByCand[c.id] || [];
-    let testCells = '';
-    for (const t of cTests) {
-      const reviews = JSON.parse(t.reviews||'[]');
-      const best = reviews.find(r => r.rating) || {};
-      const short = {
-        'Data Science':'DS','Capability Projects':'Cap','Monitorability Projects':'Mon','Research Engineering':'RE'
-      }[t.test_type] || t.test_type;
-      const badge = best.rating ? ratingBadge(best.rating, false) : '<span class="b-ungraded">ungraded</span>';
-      testCells += `<div style="margin-bottom:2px"><span style="font-size:0.78rem;color:#495057;margin-right:4px">${short}:</span>${badge}</div>`;
-    }
-    const links = JSON.parse(c.links||'[]');
-    const linksHtml = links.slice(0,3).map(l => linkPill(l)).join('');
-    const existingDec = decidedMap[c.id];
-    const decTag = existingDec ? `<span class="decided-tag dt-${existingDec}">${existingDec.toUpperCase()}</span>` : '';
 
-    tableHtml += `<tr>
-      <td><a href="#${anchor}" style="font-weight:600;font-size:0.88rem">${esc(c.name)}</a><span id="dtag-${c.id}">${decTag}</span><br><span style="font-size:0.75rem;color:#868e96">${esc(c.role||'')}</span></td>
-      <td>${testCells}</td>
-      <td style="text-align:center">${csBadge(c.codesignal)}</td>
-      <td>${linksHtml} ${c.lever_id ? `<a href="https://hire.lever.co/candidates/${c.lever_id}" target="_blank" class="link-pill">Lever</a>` : ''}</td>
-    </tr>`;
-  }
-  tableHtml += '</tbody></table>';
-  document.getElementById('summary-table').innerHTML = tableHtml;
-
-  // Detail cards
-  let detailsHtml = '';
-  for (const c of candidates) {
-    const anchor = c.name.toLowerCase().replace(/\s/g,'_').replace(/'/g,'');
     const cTests = testsByCand[c.id] || [];
     const links = JSON.parse(c.links||'[]');
     const leverUrl = c.lever_id ? `https://hire.lever.co/candidates/${c.lever_id}` : '#';
-    const linksHtml = links.map(l => linkPill(l)).join('');
+    const existingDec = decidedMap[c.id];
+    const decTag = existingDec ? `<span class="decided-tag dt-${existingDec.decision}">${existingDec.decision.toUpperCase()}</span>` : '';
 
-    let testsHtml = '';
+    // Summary row: test badges
+    let testBadges = '';
     for (const t of cTests) {
       const reviews = JSON.parse(t.reviews||'[]');
-      testsHtml += `<div class="test-hdr"><strong style="font-size:0.88rem">${esc(t.test_type)}</strong><span style="font-size:0.82rem;color:#868e96">${esc(t.submission_date||'')} &middot; ${esc(t.duration||'--')}</span></div>`;
-      testsHtml += '<div class="test-body">';
+      const best = reviews.find(r => r.rating) || {};
+      const short = {'Data Science':'DS','Capability Projects':'Cap','Monitorability Projects':'Mon','Research Engineering':'RE'}[t.test_type] || t.test_type;
+      const badge = best.rating ? ratingBadge(best.rating, false) : '<span class="b-ungraded">ungraded</span>';
+      testBadges += `<div><span style="font-size:0.78rem;color:#495057;margin-right:3px">${short}:</span>${badge}</div>`;
+    }
+
+    // Links
+    let linksHtml = links.slice(0,3).map(l => linkPill(l)).join('');
+    if (c.lever_id) linksHtml += `<a href="${leverUrl}" target="_blank" class="link-pill">Lever</a>`;
+
+    // Decision buttons (only tier 0)
+    let actionHtml = '';
+    if (c.tier === 0) {
+      const ed = existingDec?.decision || '';
+      actionHtml = `
+        <button class="btn btn-interview ${ed==='interview'?'active':''}" onclick="decide('${c.id}','interview','${esc(c.name).replace(/'/g,"\\'")}',event)">Interview</button>
+        <button class="btn btn-reject ${ed==='reject'?'active':''}" onclick="decide('${c.id}','reject','${esc(c.name).replace(/'/g,"\\'")}',event)">Reject</button>
+        <button class="btn btn-hold ${ed==='hold'?'active':''}" onclick="decide('${c.id}','hold','${esc(c.name).replace(/'/g,"\\'")}',event)">Hold</button>`;
+      if (existingDec) {
+        decisions[c.id] = { decision: existingDec.decision, name: c.name, notes: existingDec.notes || '' };
+      }
+    }
+
+    // Detail content
+    let detailHtml = '<div style="margin-top:12px;display:flex;gap:16px;align-items:center;font-size:0.85rem">';
+    detailHtml += `<div><span style="font-size:0.75rem;color:#868e96;text-transform:uppercase">Email</span> ${esc(c.email||'')}</div>`;
+    detailHtml += `<div><span style="font-size:0.75rem;color:#868e96;text-transform:uppercase">CodeSignal</span> ${csBadge(c.codesignal)}</div>`;
+    detailHtml += `<div>${links.map(l => linkPill(l)).join('')}${c.lever_id ? `<a href="${leverUrl}" target="_blank" class="link-pill">Lever</a>` : ''}</div>`;
+    detailHtml += '</div>';
+
+    for (const t of cTests) {
+      const reviews = JSON.parse(t.reviews||'[]');
+      detailHtml += `<div class="test-hdr"><strong style="font-size:0.88rem">${esc(t.test_type)}</strong><span style="font-size:0.82rem;color:#868e96">${esc(t.submission_date||'')} \u00b7 ${esc(t.duration||'--')}</span></div>`;
+      detailHtml += '<div class="test-body">';
       if (!reviews.length) {
-        testsHtml += '<div class="rev-row" style="font-size:0.82rem;color:#868e96;font-style:italic">Not yet graded</div>';
+        detailHtml += '<div class="rev-row" style="font-size:0.82rem;color:#868e96;font-style:italic">Not yet graded</div>';
       } else {
         for (const r of reviews) {
           const badge = ratingBadge(r.rating, true);
-          testsHtml += `<div class="rev-row"><div class="rev-hdr"><span class="rev-name">${esc(r.reviewer)}</span>${badge}</div>`;
-          if (r.notes) testsHtml += `<div class="rev-notes">${esc(trunc(r.notes, 400))}</div>`;
-          testsHtml += '</div>';
+          const notesId = `notes-${Math.random().toString(36).slice(2,8)}`;
+          const isLong = r.notes && r.notes.length > 200;
+          detailHtml += `<div class="rev-row"><div class="rev-hdr"><span class="rev-name">${esc(r.reviewer)}</span>${badge}</div>`;
+          if (r.notes) {
+            detailHtml += `<div class="rev-notes ${isLong?'collapsed':''}" id="${notesId}">${esc(r.notes)}</div>`;
+            if (isLong) detailHtml += `<span class="show-more" onclick="toggleNotes(this)">show more</span>`;
+          }
+          detailHtml += '</div>';
         }
       }
-      testsHtml += '</div>';
+      detailHtml += '</div>';
     }
 
-    let leverNotesHtml = '';
     if (c.lever_notes) {
-      leverNotesHtml = `<div class="lever-notes"><div class="ln-label">Lever Notes</div>${esc(c.lever_notes)}</div>`;
+      detailHtml += `<div class="lever-notes"><div class="ln-label">Lever Notes</div>${esc(c.lever_notes)}</div>`;
     }
 
-    // Decision buttons only for tier 0
-    let decisionHtml = '';
+    // Decision note field (only tier 0)
     if (c.tier === 0) {
-      const existing = decidedMap[c.id];
-      decisionHtml = `<div class="decision-bar" data-cand="${c.id}">
-        <span class="dlabel">Decision:</span>
-        <button class="btn btn-interview ${existing==='interview'?'active':''}" onclick="decide('${c.id}','interview','${esc(c.name).replace(/'/g,"\\'")}')">Interview</button>
-        <button class="btn btn-reject ${existing==='reject'?'active':''}" onclick="decide('${c.id}','reject','${esc(c.name).replace(/'/g,"\\'")}')">Reject</button>
-        <button class="btn btn-hold ${existing==='hold'?'active':''}" onclick="decide('${c.id}','hold','${esc(c.name).replace(/'/g,"\\'")}')">Hold</button>
-      </div>
-      <div class="action-log" id="al-${c.id}"></div>`;
-      if (existing) {
-        decisions[c.id] = { decision: existing, name: c.name };
-      }
+      const existingNote = existingDec?.notes || '';
+      const noteVisible = existingDec ? 'visible' : '';
+      detailHtml += `<div class="decision-note ${noteVisible}" id="note-${c.id}"><textarea id="note-input-${c.id}" placeholder="Optional note (e.g., 'interview but probe X', 'reject \u2014 too junior')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea></div>`;
     }
 
-    detailsHtml += `<div id="${anchor}" class="card">
-      <div class="card-hdr">
-        <div style="display:flex;justify-content:space-between;align-items:flex-start">
-          <div>
-            <div style="font-size:1.15rem;font-weight:600">${esc(c.name)} &nbsp;<a href="${leverUrl}" target="_blank" style="font-size:0.78rem;font-weight:400">Lever &rarr;</a></div>
-            <div style="font-size:0.82rem;color:#868e96;margin-top:2px">${esc(c.role||'')} &middot; ${esc(c.source||'')} &middot; Added ${esc(c.added_date||'')}</div>
-          </div>
-          <div style="text-align:right">
-            <div style="font-size:0.75rem;color:#868e96;text-transform:uppercase">CodeSignal</div>
-            <div>${csBadge(c.codesignal)}</div>
-          </div>
-        </div>
-        <div style="margin-top:8px;display:flex;gap:16px;align-items:center">
-          <div><span style="font-size:0.75rem;color:#868e96;text-transform:uppercase">Email</span> <span style="font-size:0.85rem">${esc(c.email||'')}</span></div>
-          <div>${linksHtml}</div>
-        </div>
+    html += `<div class="card" id="card-${c.id}">
+      <div class="card-summary" onclick="toggleCard('${c.id}')">
+        <div class="name-col"><div class="name">${esc(c.name)}<span id="dtag-${c.id}">${decTag}</span></div><div class="role">${esc(c.role||'')}</div></div>
+        <div class="tests-col">${testBadges}</div>
+        <div class="cs-col">${csBadge(c.codesignal)}</div>
+        <div class="links-col">${linksHtml}</div>
+        <div class="action-col">${actionHtml}<span class="expand-icon">\u25B6</span></div>
       </div>
-      <div class="card-body">
-        ${testsHtml}
-        ${leverNotesHtml}
-        ${decisionHtml}
-      </div>
+      <div class="card-detail">${detailHtml}</div>
     </div>`;
   }
-  document.getElementById('details').innerHTML = detailsHtml;
 
-  // If there were existing decisions, update panel
-  if (Object.keys(decisions).length) updatePanel();
+  document.getElementById('main').innerHTML = html;
+  if (Object.keys(decisions).length) updateFooter();
 }
 
 loadPacket();
