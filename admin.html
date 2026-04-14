@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Packet Admin — Execute Decisions</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; }
+  .header { background: #1a1a2e; color: #fff; padding: 20px 32px; }
+  .header h1 { font-size: 1.3rem; font-weight: 600; }
+  .header .meta { font-size: 0.85rem; color: #adb5bd; margin-top: 4px; }
+  .container { padding: 20px 32px; max-width: 1000px; }
+  .section { margin-top: 24px; }
+  .section-label { font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #495057; margin-bottom: 8px; padding-bottom: 6px; border-bottom: 2px solid #dee2e6; }
+  .row { background: #fff; border: 1px solid #e9ecef; border-radius: 8px; padding: 14px 20px; margin-top: 8px; display: flex; align-items: center; gap: 16px; }
+  .row .name { font-weight: 600; font-size: 0.95rem; flex: 1.5; }
+  .row .decision-tag { padding: 3px 10px; border-radius: 10px; font-size: 0.78rem; font-weight: 600; flex: 0.8; text-align: center; }
+  .tag-interview { background: #d3f9d8; color: #2b8a3e; }
+  .tag-reject { background: #ffe3e3; color: #c92a2a; }
+  .tag-hold { background: #fff3bf; color: #e67700; }
+  .row .notes { flex: 2; font-size: 0.82rem; color: #495057; font-style: italic; }
+  .row .status-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .status-item { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; }
+  .status-item .check { width: 18px; height: 18px; border-radius: 4px; border: 2px solid #dee2e6; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; }
+  .status-item .check.done { background: #2b8a3e; border-color: #2b8a3e; color: #fff; }
+  .status-item .check:hover { border-color: #868e96; }
+  .status-item .label { color: #495057; }
+  .status-item .label.done { color: #2b8a3e; text-decoration: line-through; }
+  .status-item .timestamp { font-size: 0.72rem; color: #adb5bd; }
+  .empty { text-align: center; padding: 40px; color: #868e96; font-size: 0.95rem; }
+  .lever-link { font-size: 0.78rem; color: #364fc7; text-decoration: none; padding: 2px 6px; background: #f1f3f5; border-radius: 3px; }
+  .refresh-btn { padding: 6px 16px; border-radius: 6px; border: 1px solid #dee2e6; background: #fff; cursor: pointer; font-size: 0.82rem; margin-left: 16px; }
+  .refresh-btn:hover { background: #f8f9fa; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Packet Admin — Execute Decisions</h1>
+  <div class="meta">Track Lever updates and email status for Rae's decisions</div>
+</div>
+
+<div class="container">
+  <div style="display:flex;align-items:center;margin-top:16px">
+    <span style="font-size:0.85rem;color:#868e96" id="last-updated"></span>
+    <button class="refresh-btn" onclick="loadDecisions()">Refresh</button>
+  </div>
+
+  <div class="section" id="pending-section">
+    <div class="section-label" id="pending-label">Pending</div>
+    <div id="pending-list"></div>
+  </div>
+
+  <div class="section" id="completed-section">
+    <div class="section-label" id="completed-label">Completed</div>
+    <div id="completed-list"></div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://hzpgmmgsjcwyxraitvnt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ba1lsjKp4HndXWBW5yKZAw_8drosOc0';
+
+async function query(table, params = '') {
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  return resp.json();
+}
+
+async function update(table, params, data) {
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    method: 'PATCH',
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+    body: JSON.stringify(data)
+  });
+  return resp.json();
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+function formatTime(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' + d.toLocaleTimeString('en-US', {hour:'numeric',minute:'2-digit'});
+}
+
+async function toggleLever(decisionId) {
+  const now = new Date().toISOString();
+  const result = await update('decisions', `id=eq.${decisionId}`, {
+    lever_executed: true, lever_executed_at: now
+  });
+  loadDecisions();
+}
+
+async function toggleEmail(decisionId) {
+  const now = new Date().toISOString();
+  const result = await update('decisions', `id=eq.${decisionId}`, {
+    email_sent: true, email_sent_at: now
+  });
+  loadDecisions();
+}
+
+async function undoLever(decisionId) {
+  await update('decisions', `id=eq.${decisionId}`, {
+    lever_executed: false, lever_executed_at: null
+  });
+  loadDecisions();
+}
+
+async function undoEmail(decisionId) {
+  await update('decisions', `id=eq.${decisionId}`, {
+    email_sent: false, email_sent_at: null
+  });
+  loadDecisions();
+}
+
+function renderRow(d, cand) {
+  const tagCls = {interview:'tag-interview',reject:'tag-reject',hold:'tag-hold'};
+  const emailTypes = {interview:'Interview scheduling',reject:'Rejection',hold:'—'};
+  const leverDone = d.lever_executed;
+  const emailDone = d.email_sent;
+  const leverUrl = cand?.lever_id ? `https://hire.lever.co/candidates/${cand.lever_id}` : '';
+
+  return `<div class="row">
+    <div class="name">
+      ${esc(cand?.name || '?')}
+      ${leverUrl ? `<a href="${leverUrl}" target="_blank" class="lever-link" style="margin-left:6px">Lever</a>` : ''}
+    </div>
+    <div class="decision-tag ${tagCls[d.decision]||''}">${(d.decision||'').toUpperCase()}</div>
+    <div class="notes">${d.notes ? esc(d.notes) : '<span style="color:#adb5bd">no note</span>'}</div>
+    <div class="status-col">
+      <div class="status-item">
+        <div class="check ${leverDone?'done':''}" onclick="${leverDone ? `undoLever('${d.id}')` : `toggleLever('${d.id}')`}">${leverDone?'✓':''}</div>
+        <span class="label ${leverDone?'done':''}">Lever updated</span>
+        ${leverDone ? `<span class="timestamp">${formatTime(d.lever_executed_at)}</span>` : ''}
+      </div>
+      <div class="status-item">
+        <div class="check ${emailDone?'done':''}" onclick="${emailDone ? `undoEmail('${d.id}')` : `toggleEmail('${d.id}')`}">${emailDone?'✓':''}</div>
+        <span class="label ${emailDone?'done':''}">${emailTypes[d.decision]||'Email'} sent</span>
+        ${emailDone ? `<span class="timestamp">${formatTime(d.email_sent_at)}</span>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function loadDecisions() {
+  const decisions = await query('decisions', 'select=*,packet_candidates(name,lever_id)&order=decided_at.desc');
+
+  document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+
+  const pending = decisions.filter(d => !d.lever_executed || !d.email_sent);
+  const completed = decisions.filter(d => d.lever_executed && d.email_sent);
+
+  document.getElementById('pending-label').textContent = `Pending (${pending.length})`;
+  document.getElementById('completed-label').textContent = `Completed (${completed.length})`;
+
+  if (!pending.length && !completed.length) {
+    document.getElementById('pending-list').innerHTML = '<div class="empty">No decisions yet. Rae hasn\'t submitted any from the packet.</div>';
+    document.getElementById('completed-list').innerHTML = '';
+    return;
+  }
+
+  document.getElementById('pending-list').innerHTML = pending.length
+    ? pending.map(d => renderRow(d, d.packet_candidates)).join('')
+    : '<div class="empty">All done!</div>';
+
+  document.getElementById('completed-list').innerHTML = completed.length
+    ? completed.map(d => renderRow(d, d.packet_candidates)).join('')
+    : '<div class="empty">None completed yet</div>';
+}
+
+loadDecisions();
+</script>
+</body>
+</html>
