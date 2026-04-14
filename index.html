@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>METR Hiring Pipeline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; }
+  a { color: #364fc7; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  .header { background: #1a1a2e; color: #fff; padding: 20px 32px; display: flex; justify-content: space-between; align-items: center; }
+  .header h1 { font-size: 1.3rem; font-weight: 600; }
+  .header .meta { font-size: 0.85rem; color: #adb5bd; }
+  .stats { display: flex; gap: 20px; padding: 16px 32px; }
+  .stat { background: #fff; border-radius: 8px; padding: 14px 20px; border: 1px solid #e9ecef; flex: 1; text-align: center; }
+  .stat .num { font-size: 1.8rem; font-weight: 700; }
+  .stat .label { font-size: 0.78rem; color: #868e96; text-transform: uppercase; letter-spacing: 0.04em; }
+  .container { padding: 0 32px 32px; }
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; background: #fff; border-radius: 8px; overflow: hidden; border: 1px solid #e9ecef; }
+  .summary-table th { text-align: left; padding: 10px; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: #868e96; border-bottom: 2px solid #dee2e6; background: #f8f9fa; }
+  .summary-table td { padding: 8px 10px; border-bottom: 1px solid #f1f3f5; }
+  .summary-table tr:hover { background: #f8f9fa; }
+  .tier-header td { padding: 12px 10px 6px; font-size: 0.82rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; border-bottom: 2px solid #dee2e6; }
+  .badge { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.75rem; font-weight: 500; }
+  .b-above { background: #d3f9d8; color: #2b8a3e; }
+  .b-bord-above { background: #fff3bf; color: #e67700; }
+  .b-bord-below { background: #ffe8cc; color: #d9480f; }
+  .b-below { background: #ffe3e3; color: #c92a2a; }
+  .b-ungraded { font-size: 0.75rem; color: #adb5bd; }
+  .cs-green { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; background: #d3f9d8; color: #2b8a3e; }
+  .cs-yellow { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; background: #fff3bf; color: #e67700; }
+  .cs-red { display: inline-block; padding: 1px 6px; border-radius: 8px; font-size: 0.78rem; font-weight: 600; background: #ffe3e3; color: #c92a2a; }
+  .link-pill { font-size: 0.75rem; color: #364fc7; margin-right: 6px; padding: 1px 4px; background: #f1f3f5; border-radius: 3px; text-decoration: none; }
+  /* Detail cards */
+  .detail-section { padding: 16px 32px 32px; }
+  .card { background: #fff; border-radius: 8px; border: 1px solid #e9ecef; margin-top: 16px; overflow: hidden; }
+  .card-hdr { padding: 16px 20px; border-bottom: 1px solid #f1f3f5; }
+  .card-body { padding: 16px 20px; }
+  .test-hdr { margin-top: 10px; padding: 8px 12px; background: #f8f9fa; border-radius: 6px 6px 0 0; border: 1px solid #e9ecef; border-bottom: none; display: flex; justify-content: space-between; align-items: center; }
+  .test-body { border: 1px solid #e9ecef; border-radius: 0 0 6px 6px; margin-bottom: 8px; }
+  .rev-row { padding: 8px 12px; border-bottom: 1px solid #f1f3f5; }
+  .rev-row:last-child { border-bottom: none; }
+  .rev-hdr { display: flex; justify-content: space-between; align-items: center; }
+  .rev-name { font-size: 0.82rem; font-weight: 600; color: #495057; }
+  .rev-notes { font-size: 0.82rem; color: #495057; line-height: 1.4; margin-top: 4px; max-height: 120px; overflow: hidden; }
+  .badge-full { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; }
+  /* Decision buttons */
+  .decision-bar { margin-top: 12px; padding: 12px 14px; background: #f8f9fa; border-radius: 6px; display: flex; gap: 8px; align-items: center; }
+  .decision-bar .dlabel { font-size: 0.82rem; color: #495057; font-weight: 500; margin-right: 8px; }
+  .btn { padding: 6px 16px; border-radius: 6px; border: 1px solid #dee2e6; background: #fff; cursor: pointer; font-size: 0.82rem; font-weight: 500; transition: all 0.15s; }
+  .btn:hover { border-color: #adb5bd; }
+  .btn-interview { color: #2b8a3e; border-color: #2b8a3e; }
+  .btn-interview:hover, .btn-interview.active { background: #2b8a3e; color: #fff; }
+  .btn-reject { color: #c92a2a; border-color: #c92a2a; }
+  .btn-reject:hover, .btn-reject.active { background: #c92a2a; color: #fff; }
+  .btn-hold { color: #e67700; border-color: #e67700; }
+  .btn-hold:hover, .btn-hold.active { background: #e67700; color: #fff; }
+  .action-log { margin-top: 4px; padding: 8px 14px; border-radius: 4px; font-size: 0.78rem; font-family: 'SF Mono', monospace; display: none; }
+  .action-log.visible { display: block; }
+  .al-interview { background: #e7f5ff; color: #1864ab; }
+  .al-reject { background: #fff5f5; color: #c92a2a; }
+  .al-hold { background: #fff9db; color: #664d03; }
+  .decided-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; margin-left: 8px; }
+  .dt-interview { background: #d3f9d8; color: #2b8a3e; }
+  .dt-reject { background: #ffe3e3; color: #c92a2a; }
+  .dt-hold { background: #fff3bf; color: #e67700; }
+  /* Sticky panel */
+  .panel { position: sticky; bottom: 0; background: #1a1a2e; color: #fff; padding: 16px 32px; display: none; border-radius: 8px 8px 0 0; z-index: 100; }
+  .panel.visible { display: block; }
+  .panel h3 { font-size: 0.95rem; margin-bottom: 8px; }
+  .panel-list { font-size: 0.85rem; }
+  .panel-item { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px solid #2a2a4e; }
+  .panel-item:last-child { border: none; }
+  .submit-btn { margin-top: 12px; padding: 8px 24px; background: #364fc7; color: #fff; border: none; border-radius: 6px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+  .submit-btn:hover { background: #2b3fb0; }
+  .clear-btn { margin-top: 12px; margin-left: 8px; padding: 8px 24px; background: transparent; color: #adb5bd; border: 1px solid #adb5bd; border-radius: 6px; font-size: 0.85rem; cursor: pointer; }
+  .submit-ok { margin-top: 8px; padding: 8px 12px; background: #2b8a3e; color: #fff; border-radius: 6px; font-size: 0.85rem; }
+  .loading { text-align: center; padding: 60px; color: #868e96; font-size: 1rem; }
+  .lever-notes { background: #f8f9fa; border-radius: 6px; padding: 10px 14px; margin-top: 8px; font-size: 0.82rem; color: #495057; }
+  .lever-notes .ln-label { font-size: 0.72rem; text-transform: uppercase; color: #868e96; margin-bottom: 4px; letter-spacing: 0.03em; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Hiring Pipeline &mdash; Ready for Review</h1>
+    <div class="meta" id="subtitle">Loading...</div>
+  </div>
+  <div class="meta" id="counts"></div>
+</div>
+
+<div class="stats" id="stats-bar"></div>
+
+<div class="container">
+  <div id="summary-table"><div class="loading">Loading packet data...</div></div>
+</div>
+
+<div class="detail-section">
+  <h2 style="font-size:1.1rem;font-weight:600;color:#1a1a2e;margin-bottom:4px">Candidate Details</h2>
+  <div style="font-size:0.82rem;color:#868e96;margin-bottom:8px">Click a name in the summary table to jump to their detail.</div>
+  <div id="details"></div>
+</div>
+
+<div class="panel" id="panel">
+  <h3>Pending Decisions</h3>
+  <div class="panel-list" id="panel-list"></div>
+  <button class="submit-btn" onclick="submitDecisions()">Submit Decisions</button>
+  <button class="clear-btn" onclick="clearAll()">Clear All</button>
+  <div id="submit-status"></div>
+</div>
+
+<div style="text-align:center;padding:20px;color:#adb5bd;font-size:0.78rem">
+  Clout Pipeline &middot; Data from Lever + Airtable + CodeSignal API
+</div>
+
+<script>
+const SUPABASE_URL = 'https://hzpgmmgsjcwyxraitvnt.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ba1lsjKp4HndXWBW5yKZAw_8drosOc0';
+
+const decisions = {};
+let candidatesData = [];
+
+async function query(table, params = '') {
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
+    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+  });
+  return resp.json();
+}
+
+async function insert(table, data) {
+  const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+    method: 'POST',
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(data)
+  });
+  return resp.json();
+}
+
+function esc(s) { const d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+function trunc(s, n=300) { return s && s.length > n ? s.slice(0,n)+'...' : (s||''); }
+
+function ratingBadge(r, full) {
+  if (!r) return full ? '<span style="color:#868e96">--</span>' : '';
+  const rl = r.toLowerCase();
+  const map = [
+    ['clearly above','b-above','#d3f9d8','#2b8a3e','Above','Clearly above bar'],
+    ['borderline above','b-bord-above','#fff3bf','#e67700','Bord. Above','Borderline above'],
+    ['borderline below','b-bord-below','#ffe8cc','#d9480f','Bord. Below','Borderline below'],
+    ['clearly below','b-below','#ffe3e3','#c92a2a','Below','Clearly below bar']
+  ];
+  for (const [key,cls,bg,c,short,long] of map) {
+    if (rl.includes(key)) {
+      const label = full ? long : short;
+      return `<span class="${full?'badge-full':'badge'}" style="background:${bg};color:${c}">${label}</span>`;
+    }
+  }
+  return '';
+}
+
+function csBadge(cs) {
+  if (!cs) return '<span style="color:#868e96">--</span>';
+  const num = parseInt(cs);
+  const cls = num >= 580 ? 'cs-green' : num >= 500 ? 'cs-yellow' : 'cs-red';
+  return `<span class="${cls}">${esc(cs)}</span>`;
+}
+
+function linkPill(url) {
+  let label = 'Web';
+  if (url.includes('linkedin')) label = 'LI';
+  else if (url.includes('github')) label = 'GH';
+  else if (url.includes('scholar')) label = 'Scholar';
+  return `<a href="${esc(url)}" target="_blank" class="link-pill">${label}</a>`;
+}
+
+const tierLabels = {0: 'Ready for Decision', 1: 'Waiting on Grades', 2: 'Waiting on Submissions'};
+const tierColors = {0: '#2b8a3e', 1: '#e67700', 2: '#868e96'};
+
+const actionMap = {
+  interview: (name) => [
+    `Lever: Move "${name}" to Hiring Manager Interview stage`,
+    `Email queue: Add to interview scheduling batch`,
+    `Airtable: Mark all tests as Processed`
+  ],
+  reject: (name) => [
+    `Lever: Archive "${name}" (reason: work test performance)`,
+    `Email queue: Add to rejection batch`,
+    `Airtable: Mark all tests as Processed`
+  ],
+  hold: (name) => [
+    `No Lever change for "${name}"`,
+    `Airtable: Add note "Hold per Rae"`,
+    `Flag for next week's packet`
+  ]
+};
+
+function decide(candId, decision, name) {
+  if (decisions[candId] && decisions[candId].decision === decision) {
+    delete decisions[candId];
+    document.querySelectorAll(`[data-cand="${candId}"] .btn`).forEach(b => b.classList.remove('active'));
+    const log = document.getElementById(`al-${candId}`);
+    if (log) log.classList.remove('visible');
+    // Remove decided tag from summary
+    const tag = document.getElementById(`dtag-${candId}`);
+    if (tag) tag.innerHTML = '';
+    updatePanel();
+    return;
+  }
+  decisions[candId] = { decision, name };
+  document.querySelectorAll(`[data-cand="${candId}"] .btn`).forEach(b => b.classList.remove('active'));
+  document.querySelector(`[data-cand="${candId}"] .btn-${decision}`).classList.add('active');
+  const log = document.getElementById(`al-${candId}`);
+  if (log) {
+    log.className = `action-log visible al-${decision}`;
+    log.innerHTML = actionMap[decision](name).map(a => `<div>&rarr; ${a}</div>`).join('');
+  }
+  // Update summary tag
+  const tag = document.getElementById(`dtag-${candId}`);
+  const tagColors = {interview:'dt-interview',reject:'dt-reject',hold:'dt-hold'};
+  if (tag) tag.innerHTML = `<span class="decided-tag ${tagColors[decision]}">${decision.toUpperCase()}</span>`;
+  updatePanel();
+}
+
+function updatePanel() {
+  const panel = document.getElementById('panel');
+  const list = document.getElementById('panel-list');
+  const entries = Object.entries(decisions);
+  if (!entries.length) { panel.classList.remove('visible'); return; }
+  panel.classList.add('visible');
+  const colors = {interview:'#2b8a3e',reject:'#c92a2a',hold:'#e67700'};
+  list.innerHTML = entries.map(([id,d]) =>
+    `<div class="panel-item"><span>${esc(d.name)}</span><span style="color:${colors[d.decision]};font-weight:600;text-transform:uppercase">${d.decision}</span></div>`
+  ).join('');
+  document.getElementById('submit-status').innerHTML = '';
+}
+
+async function submitDecisions() {
+  const entries = Object.entries(decisions);
+  if (!entries.length) return;
+  // Get packet_id from first candidate
+  const packetId = candidatesData[0]?.packet_id;
+  const rows = entries.map(([candId, d]) => ({
+    candidate_id: candId,
+    packet_id: packetId,
+    decision: d.decision,
+    decided_by: 'rae@metr.org'
+  }));
+  try {
+    await insert('decisions', rows);
+    document.getElementById('submit-status').innerHTML = '<div class="submit-ok">Decisions saved successfully.</div>';
+  } catch(e) {
+    document.getElementById('submit-status').innerHTML = `<div style="color:#c92a2a;margin-top:8px">Error: ${e.message}</div>`;
+  }
+}
+
+function clearAll() {
+  Object.keys(decisions).forEach(id => {
+    document.querySelectorAll(`[data-cand="${id}"] .btn`).forEach(b => b.classList.remove('active'));
+    const log = document.getElementById(`al-${id}`);
+    if (log) log.classList.remove('visible');
+    const tag = document.getElementById(`dtag-${id}`);
+    if (tag) tag.innerHTML = '';
+  });
+  for (const k in decisions) delete decisions[k];
+  updatePanel();
+}
+
+async function loadPacket() {
+  // Get latest packet
+  const packets = await query('packets', 'order=created_at.desc&limit=1');
+  if (!packets.length) { document.getElementById('summary-table').innerHTML = '<div class="loading">No packet found.</div>'; return; }
+  const packet = packets[0];
+
+  document.getElementById('subtitle').textContent = `Week of ${packet.week_label} \u00b7 Prepared by Clout (Vaishnav)`;
+
+  // Get candidates
+  const candidates = await query('packet_candidates', `packet_id=eq.${packet.id}&order=tier.asc,name.asc`);
+  candidatesData = candidates;
+
+  // Get all tests
+  const tests = await query('packet_tests', `candidate_id=in.(${candidates.map(c=>c.id).join(',')})&order=test_type.asc`);
+  const testsByCand = {};
+  tests.forEach(t => { (testsByCand[t.candidate_id] = testsByCand[t.candidate_id]||[]).push(t); });
+
+  // Get existing decisions
+  const existingDecisions = await query('decisions', `packet_id=eq.${packet.id}`);
+  const decidedMap = {};
+  existingDecisions.forEach(d => { decidedMap[d.candidate_id] = d.decision; });
+
+  // Stats
+  const tiers = {0:0,1:0,2:0};
+  candidates.forEach(c => tiers[c.tier]++);
+  document.getElementById('counts').textContent = `${candidates.length} candidates \u00b7 ${tests.length} work tests`;
+  document.getElementById('stats-bar').innerHTML = `
+    <div class="stat"><div class="num">${candidates.length}</div><div class="label">Candidates</div></div>
+    <div class="stat"><div class="num">${tests.filter(t => { const r = JSON.parse(t.reviews||'[]'); return r.length > 0; }).length}</div><div class="label">Tests Graded</div></div>
+    <div class="stat"><div class="num">${tiers[0]}</div><div class="label">Ready for Decision</div></div>
+    <div class="stat"><div class="num">${tiers[1]}</div><div class="label">Waiting on Grades</div></div>
+  `;
+
+  // Summary table
+  let tableHtml = `<table class="summary-table"><thead><tr>
+    <th>Candidate</th><th>Tests & Ratings</th><th style="text-align:center">CodeSignal</th><th>Links</th><th>Source</th>
+  </tr></thead><tbody>`;
+
+  let lastTier = null;
+  for (const c of candidates) {
+    if (c.tier !== lastTier) {
+      tableHtml += `<tr class="tier-header"><td colspan="5" style="color:${tierColors[c.tier]}">${tierLabels[c.tier]} (${tiers[c.tier]})</td></tr>`;
+      lastTier = c.tier;
+    }
+    const anchor = c.name.toLowerCase().replace(/\s/g,'_').replace(/'/g,'');
+    const cTests = testsByCand[c.id] || [];
+    let testCells = '';
+    for (const t of cTests) {
+      const reviews = JSON.parse(t.reviews||'[]');
+      const best = reviews.find(r => r.rating) || {};
+      const short = {
+        'Data Science':'DS','Capability Projects':'Cap','Monitorability Projects':'Mon','Research Engineering':'RE'
+      }[t.test_type] || t.test_type;
+      const badge = best.rating ? ratingBadge(best.rating, false) : '<span class="b-ungraded">ungraded</span>';
+      testCells += `<div style="margin-bottom:2px"><span style="font-size:0.78rem;color:#495057;margin-right:4px">${short}:</span>${badge}</div>`;
+    }
+    const links = JSON.parse(c.links||'[]');
+    const linksHtml = links.slice(0,3).map(l => linkPill(l)).join('');
+    const existingDec = decidedMap[c.id];
+    const decTag = existingDec ? `<span class="decided-tag dt-${existingDec}">${existingDec.toUpperCase()}</span>` : '';
+
+    tableHtml += `<tr>
+      <td><a href="#${anchor}" style="font-weight:600;font-size:0.88rem">${esc(c.name)}</a><span id="dtag-${c.id}">${decTag}</span><br><span style="font-size:0.75rem;color:#868e96">${esc(c.role||'')}</span></td>
+      <td>${testCells}</td>
+      <td style="text-align:center">${csBadge(c.codesignal)}</td>
+      <td>${linksHtml}</td>
+      <td style="font-size:0.82rem;color:#868e96">${esc(c.source||'')}<br>${esc(c.added_date||'')}</td>
+    </tr>`;
+  }
+  tableHtml += '</tbody></table>';
+  document.getElementById('summary-table').innerHTML = tableHtml;
+
+  // Detail cards
+  let detailsHtml = '';
+  for (const c of candidates) {
+    const anchor = c.name.toLowerCase().replace(/\s/g,'_').replace(/'/g,'');
+    const cTests = testsByCand[c.id] || [];
+    const links = JSON.parse(c.links||'[]');
+    const leverUrl = c.lever_id ? `https://hire.lever.co/candidates/${c.lever_id}` : '#';
+    const linksHtml = links.map(l => linkPill(l)).join('');
+
+    let testsHtml = '';
+    for (const t of cTests) {
+      const reviews = JSON.parse(t.reviews||'[]');
+      testsHtml += `<div class="test-hdr"><strong style="font-size:0.88rem">${esc(t.test_type)}</strong><span style="font-size:0.82rem;color:#868e96">${esc(t.submission_date||'')} &middot; ${esc(t.duration||'--')}</span></div>`;
+      testsHtml += '<div class="test-body">';
+      if (!reviews.length) {
+        testsHtml += '<div class="rev-row" style="font-size:0.82rem;color:#868e96;font-style:italic">Not yet graded</div>';
+      } else {
+        for (const r of reviews) {
+          const badge = ratingBadge(r.rating, true);
+          testsHtml += `<div class="rev-row"><div class="rev-hdr"><span class="rev-name">${esc(r.reviewer)}</span>${badge}</div>`;
+          if (r.notes) testsHtml += `<div class="rev-notes">${esc(trunc(r.notes, 400))}</div>`;
+          testsHtml += '</div>';
+        }
+      }
+      testsHtml += '</div>';
+    }
+
+    let leverNotesHtml = '';
+    if (c.lever_notes) {
+      leverNotesHtml = `<div class="lever-notes"><div class="ln-label">Lever Notes</div>${esc(c.lever_notes)}</div>`;
+    }
+
+    // Decision buttons only for tier 0
+    let decisionHtml = '';
+    if (c.tier === 0) {
+      const existing = decidedMap[c.id];
+      decisionHtml = `<div class="decision-bar" data-cand="${c.id}">
+        <span class="dlabel">Decision:</span>
+        <button class="btn btn-interview ${existing==='interview'?'active':''}" onclick="decide('${c.id}','interview','${esc(c.name).replace(/'/g,"\\'")}')">Interview</button>
+        <button class="btn btn-reject ${existing==='reject'?'active':''}" onclick="decide('${c.id}','reject','${esc(c.name).replace(/'/g,"\\'")}')">Reject</button>
+        <button class="btn btn-hold ${existing==='hold'?'active':''}" onclick="decide('${c.id}','hold','${esc(c.name).replace(/'/g,"\\'")}')">Hold</button>
+      </div>
+      <div class="action-log" id="al-${c.id}"></div>`;
+      if (existing) {
+        decisions[c.id] = { decision: existing, name: c.name };
+      }
+    }
+
+    detailsHtml += `<div id="${anchor}" class="card">
+      <div class="card-hdr">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start">
+          <div>
+            <div style="font-size:1.15rem;font-weight:600">${esc(c.name)} &nbsp;<a href="${leverUrl}" target="_blank" style="font-size:0.78rem;font-weight:400">Lever &rarr;</a></div>
+            <div style="font-size:0.82rem;color:#868e96;margin-top:2px">${esc(c.role||'')} &middot; ${esc(c.source||'')} &middot; Added ${esc(c.added_date||'')}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:0.75rem;color:#868e96;text-transform:uppercase">CodeSignal</div>
+            <div>${csBadge(c.codesignal)}</div>
+          </div>
+        </div>
+        <div style="margin-top:8px;display:flex;gap:16px;align-items:center">
+          <div><span style="font-size:0.75rem;color:#868e96;text-transform:uppercase">Email</span> <span style="font-size:0.85rem">${esc(c.email||'')}</span></div>
+          <div>${linksHtml}</div>
+        </div>
+      </div>
+      <div class="card-body">
+        ${testsHtml}
+        ${leverNotesHtml}
+        ${decisionHtml}
+      </div>
+    </div>`;
+  }
+  document.getElementById('details').innerHTML = detailsHtml;
+
+  // If there were existing decisions, update panel
+  if (Object.keys(decisions).length) updatePanel();
+}
+
+loadPacket();
+</script>
+</body>
+</html>
