@@ -53,6 +53,7 @@
   .action-trigger.decided-interview { background: #2b8a3e; }
   .action-trigger.decided-reject { background: #c92a2a; }
   .action-trigger.decided-hold { background: #e67700; }
+  .action-trigger.decided-send { background: #364fc7; }
   .action-panel { display: none; padding: 12px 20px; background: #f8f9fa; border-top: 1px solid #e9ecef; }
   .action-panel.visible { display: block; }
   .action-panel .action-buttons { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
@@ -100,6 +101,8 @@
   .btn-reject:hover, .btn-reject.active { background: #c92a2a; color: #fff; }
   .btn-hold { color: #e67700; border-color: #e67700; }
   .btn-hold:hover, .btn-hold.active { background: #e67700; color: #fff; }
+  .btn-send { color: #364fc7; border-color: #364fc7; }
+  .btn-send:hover, .btn-send.active { background: #364fc7; color: #fff; }
 
   .decision-note { margin-top: 8px; display: none; }
   .decision-note.visible { display: block; }
@@ -110,6 +113,7 @@
   .dt-interview { background: #d3f9d8; color: #2b8a3e; }
   .dt-reject { background: #ffe3e3; color: #c92a2a; }
   .dt-hold { background: #fff3bf; color: #e67700; }
+  .dt-send { background: #dbe4ff; color: #364fc7; }
 
   /* Sticky footer */
   .footer-bar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a2e; color: #fff; padding: 12px 32px; display: flex; justify-content: space-between; align-items: center; z-index: 100; font-size: 0.85rem; }
@@ -258,12 +262,18 @@ function decide(candId, decision, name, e) {
   const activeBtn = document.querySelector(`#card-${candId} .btn-${decision}`);
   if (activeBtn) activeBtn.classList.add('active');
   // Update trigger button
-  const edColors = {interview:'decided-interview',reject:'decided-reject',hold:'decided-hold'};
-  if (trigger) { trigger.className = `action-trigger decided ${edColors[decision]}`; trigger.textContent = decision.toUpperCase(); }
+  const edColors = {interview:'decided-interview',reject:'decided-reject',hold:'decided-hold',
+    send_ds:'decided-send',send_cap:'decided-send',send_mon:'decided-send',send_re:'decided-send'};
+  const edLabels = {interview:'INTERVIEW',reject:'REJECT',hold:'HOLD',
+    send_ds:'SEND DS',send_cap:'SEND CAP',send_mon:'SEND MON',send_re:'SEND RE'};
+  if (trigger) { trigger.className = `action-trigger decided ${edColors[decision]||''}`; trigger.textContent = edLabels[decision] || decision.toUpperCase(); }
   // Update tag
   const tag = document.getElementById(`dtag-${candId}`);
-  const tagCls = {interview:'dt-interview',reject:'dt-reject',hold:'dt-hold'};
-  if (tag) tag.innerHTML = `<span class="decided-tag ${tagCls[decision]}">${decision.toUpperCase()}</span>`;
+  const tagCls = {interview:'dt-interview',reject:'dt-reject',hold:'dt-hold',
+    send_ds:'dt-send',send_cap:'dt-send',send_mon:'dt-send',send_re:'dt-send'};
+  const tagLabels = {interview:'INTERVIEW',reject:'REJECT',hold:'HOLD',
+    send_ds:'SEND DS',send_cap:'SEND CAP',send_mon:'SEND MON',send_re:'SEND RE'};
+  if (tag) tag.innerHTML = `<span class="decided-tag ${tagCls[decision]||''}">${tagLabels[decision]||decision.toUpperCase()}</span>`;
   updateFooter();
 }
 
@@ -430,14 +440,29 @@ async function loadPacket() {
     if (c.tier === 0) {
       const existingNote = existingDec?.notes || '';
       const panelVisible = existingDec ? 'visible' : '';
+      const safeName = esc(c.name).replace(/'/g,"\\'");
       actionPanelHtml = `<div class="action-panel ${panelVisible}" id="action-panel-${c.id}">
-        <div class="action-buttons">
-          <span class="action-label">Decision:</span>
-          <button class="btn btn-interview ${ed==='interview'?'active':''}" onclick="decide('${c.id}','interview','${esc(c.name).replace(/'/g,"\\'")}',event)">Interview</button>
-          <button class="btn btn-reject ${ed==='reject'?'active':''}" onclick="decide('${c.id}','reject','${esc(c.name).replace(/'/g,"\\'")}',event)">Reject</button>
-          <button class="btn btn-hold ${ed==='hold'?'active':''}" onclick="decide('${c.id}','hold','${esc(c.name).replace(/'/g,"\\'")}',event)">Hold</button>
+        <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px">
+          <div>
+            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:#868e96;margin-bottom:4px;font-weight:600">Decision</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-interview ${ed==='interview'?'active':''}" onclick="decide('${c.id}','interview','${safeName}',event)">Interview</button>
+              <button class="btn btn-reject ${ed==='reject'?'active':''}" onclick="decide('${c.id}','reject','${safeName}',event)">Reject</button>
+              <button class="btn btn-hold ${ed==='hold'?'active':''}" onclick="decide('${c.id}','hold','${safeName}',event)">Hold</button>
+            </div>
+          </div>
+          <div>
+            <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:#868e96;margin-bottom:4px;font-weight:600">Send Assessment</div>
+            <div style="display:flex;gap:6px">
+              <button class="btn btn-send" onclick="decide('${c.id}','send_ds','${safeName}',event)">DS Test</button>
+              <button class="btn btn-send" onclick="decide('${c.id}','send_cap','${safeName}',event)">Cap Test</button>
+              <button class="btn btn-send" onclick="decide('${c.id}','send_mon','${safeName}',event)">Mon Test</button>
+              <button class="btn btn-send" onclick="decide('${c.id}','send_re','${safeName}',event)">RE Test</button>
+            </div>
+          </div>
         </div>
-        <textarea id="note-input-${c.id}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:6px;font-size:0.82rem;font-family:inherit;resize:vertical;min-height:36px" placeholder="Optional note for Rae (e.g., 'probe X in interview', 'reject \u2014 too junior')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea>
+        <textarea id="note-input-${c.id}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:6px;font-size:0.82rem;font-family:inherit;resize:vertical;min-height:36px" placeholder="Note for Vaishnav (e.g., 'schedule interview with Nate', 'send DS + Mon tests', 'reject \u2014 too junior')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea>
+        <div style="font-size:0.72rem;color:#adb5bd;margin-top:4px;font-style:italic">Actions will be executed manually by Vaishnav after review.</div>
       </div>`;
     }
 
