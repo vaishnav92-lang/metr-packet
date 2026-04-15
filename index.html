@@ -291,6 +291,59 @@ function updateFooter() {
   document.getElementById('submit-status').textContent = '';
 }
 
+async function submitOne(candId, e) {
+  if (e) e.stopPropagation();
+  if (!decisions[candId]) return;
+  const d = decisions[candId];
+  const packetId = candidatesData[0]?.packet_id;
+  const cand = candidatesData.find(c => c.id === candId);
+  const statusEl = document.getElementById(`submit-one-status-${candId}`);
+  const btn = document.getElementById(`submit-one-${candId}`);
+  statusEl.textContent = 'Saving...';
+  statusEl.style.color = '#868e96';
+  btn.disabled = true;
+
+  try {
+    // Soft-delete existing active decision
+    await fetch(`${SUPABASE_URL}/rest/v1/decisions?candidate_id=eq.${candId}&packet_id=eq.${packetId}&deleted_at=is.null`, {
+      method: 'PATCH',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json' },
+      body: JSON.stringify({ deleted_at: new Date().toISOString() })
+    });
+
+    const row = {
+      master_candidate_id: cand?.master_candidate_id || null,
+      candidate_id: candId,
+      packet_id: packetId,
+      decision: d.decision,
+      decided_by: 'rae@metr.org',
+      notes: d.notes || null
+    };
+
+    const resp = await fetch(`${SUPABASE_URL}/rest/v1/decisions`, {
+      method: 'POST',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+        'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+      body: JSON.stringify(row)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`${resp.status}: ${err}`);
+    }
+
+    statusEl.textContent = 'Saved!';
+    statusEl.style.color = '#2b8a3e';
+    btn.disabled = false;
+  } catch(e) {
+    statusEl.textContent = 'Error: ' + e.message;
+    statusEl.style.color = '#c92a2a';
+    btn.disabled = false;
+    console.error('Submit error:', e);
+  }
+}
+
 async function submitDecisions() {
   const entries = Object.entries(decisions);
   if (!entries.length) return;
@@ -500,8 +553,14 @@ async function loadPacket() {
             </div>
           </div>
         </div>
-        <textarea id="note-input-${c.id}" style="width:100%;padding:8px;border:1px solid #dee2e6;border-radius:6px;font-size:0.82rem;font-family:inherit;resize:vertical;min-height:36px" placeholder="Note for Vaishnav (e.g., 'schedule interview with Nate', 'send DS + Mon tests', 'reject \u2014 too junior')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea>
-        <div style="font-size:0.72rem;color:#adb5bd;margin-top:4px;font-style:italic">Actions will be executed manually by Vaishnav after review.</div>
+        <div style="display:flex;gap:8px;align-items:flex-start;margin-top:2px">
+          <textarea id="note-input-${c.id}" style="flex:1;padding:8px;border:1px solid #dee2e6;border-radius:6px;font-size:0.82rem;font-family:inherit;resize:vertical;min-height:36px" placeholder="Note for Vaishnav (e.g., 'schedule interview with Nate', 'send DS + Mon tests')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea>
+          <button class="submit-btn" style="white-space:nowrap;margin-top:0" onclick="submitOne('${c.id}',event)" id="submit-one-${c.id}">Submit</button>
+        </div>
+        <div style="font-size:0.72rem;color:#adb5bd;margin-top:4px;display:flex;justify-content:space-between">
+          <span style="font-style:italic">Actions will be executed manually by Vaishnav after review.</span>
+          <span id="submit-one-status-${c.id}"></span>
+        </div>
       </div>`;
     }
 
