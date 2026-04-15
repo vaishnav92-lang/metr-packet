@@ -117,12 +117,29 @@ async function undoEmail(decisionId) {
   loadDecisions();
 }
 
+async function toggleAirtable(decisionId) {
+  const now = new Date().toISOString();
+  await update('decisions', `id=eq.${decisionId}`, {
+    airtable_processed: true, airtable_processed_at: now
+  });
+  loadDecisions();
+}
+
+async function undoAirtable(decisionId) {
+  await update('decisions', `id=eq.${decisionId}`, {
+    airtable_processed: false, airtable_processed_at: null
+  });
+  loadDecisions();
+}
+
 function renderRow(d, cand) {
   const tagCls = {interview:'tag-interview',reject:'tag-reject',hold:'tag-hold'};
   const emailTypes = {interview:'Interview scheduling',reject:'Rejection',hold:'—'};
   const leverDone = d.lever_executed;
   const emailDone = d.email_sent;
+  const airtableDone = d.airtable_processed;
   const leverUrl = cand?.lever_id ? `https://hire.lever.co/candidates/${cand.lever_id}` : '';
+  const showAirtable = ['interview','reject'].includes(d.decision);
 
   return `<div class="row">
     <div class="name">
@@ -142,6 +159,11 @@ function renderRow(d, cand) {
         <span class="label ${emailDone?'done':''}">${emailTypes[d.decision]||'Email'} sent</span>
         ${emailDone ? `<span class="timestamp">${formatTime(d.email_sent_at)}</span>` : ''}
       </div>
+      ${showAirtable ? `<div class="status-item">
+        <div class="check ${airtableDone?'done':''}" onclick="${airtableDone ? `undoAirtable('${d.id}')` : `toggleAirtable('${d.id}')`}">${airtableDone?'✓':''}</div>
+        <span class="label ${airtableDone?'done':''}">Airtable processed</span>
+        ${airtableDone ? `<span class="timestamp">${formatTime(d.airtable_processed_at)}</span>` : ''}
+      </div>` : ''}
     </div>
   </div>`;
 }
@@ -160,8 +182,14 @@ async function loadDecisions() {
 
   document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
 
-  const pending = decisions.filter(d => !d.lever_executed || !d.email_sent);
-  const completed = decisions.filter(d => d.lever_executed && d.email_sent);
+  const isComplete = (d) => {
+    if (!d.lever_executed || !d.email_sent) return false;
+    // Interview/reject also need airtable processed
+    if (['interview','reject'].includes(d.decision) && !d.airtable_processed) return false;
+    return true;
+  };
+  const pending = decisions.filter(d => !isComplete(d));
+  const completed = decisions.filter(d => isComplete(d));
 
   document.getElementById('pending-label').textContent = `Pending (${pending.length})`;
   document.getElementById('completed-label').textContent = `Completed (${completed.length})`;
