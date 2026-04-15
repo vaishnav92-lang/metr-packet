@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Packet Admin — Execute Decisions</title>
+<title>[TEST] Packet Admin — Execute Decisions</title>
 <style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; color: #1a1a1a; }
@@ -36,6 +36,7 @@
 </head>
 <body>
 
+<div style="background:#c92a2a;color:#fff;padding:6px 32px;font-size:0.82rem;font-weight:600;text-align:center">TEST ENVIRONMENT</div>
 <div class="header">
   <h1>Packet Admin — Execute Decisions</h1>
   <div class="meta">Track Lever updates and email status for Rae's decisions</div>
@@ -148,7 +149,7 @@ function renderRow(d, cand) {
 
 async function loadDecisions() {
   // Query decisions joined to both packet_candidates and master candidates table
-  let decisions = await query('decisions', 'select=*,packet_candidates(name,lever_id),candidates(name,lever_id)&deleted_at=is.null&order=decided_at.desc');
+  let decisions = await query('decisions', 'select=*,packet_candidates(name,lever_id),candidates(name,lever_id)&order=decided_at.desc');
   // Normalize: prefer master candidates name, fallback to packet_candidates
   decisions = decisions.map(d => {
     const master = d.candidates || {};
