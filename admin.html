@@ -147,7 +147,16 @@ function renderRow(d, cand) {
 }
 
 async function loadDecisions() {
-  const decisions = await query('decisions', 'select=*,packet_candidates(name,lever_id)&order=decided_at.desc');
+  // Query decisions joined to both packet_candidates and master candidates table
+  let decisions = await query('decisions', 'select=*,packet_candidates(name,lever_id),candidates(name,lever_id)&order=decided_at.desc');
+  // Normalize: prefer master candidates name, fallback to packet_candidates
+  decisions = decisions.map(d => {
+    const master = d.candidates || {};
+    const pkt = d.packet_candidates || {};
+    d._name = master.name || pkt.name || '?';
+    d._lever_id = master.lever_id || pkt.lever_id || '';
+    return d;
+  });
 
   document.getElementById('last-updated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
 
@@ -164,11 +173,11 @@ async function loadDecisions() {
   }
 
   document.getElementById('pending-list').innerHTML = pending.length
-    ? pending.map(d => renderRow(d, d.packet_candidates)).join('')
+    ? pending.map(d => renderRow(d, {name: d._name, lever_id: d._lever_id})).join('')
     : '<div class="empty">All done!</div>';
 
   document.getElementById('completed-list').innerHTML = completed.length
-    ? completed.map(d => renderRow(d, d.packet_candidates)).join('')
+    ? completed.map(d => renderRow(d, {name: d._name, lever_id: d._lever_id})).join('')
     : '<div class="empty">None completed yet</div>';
 }
 
