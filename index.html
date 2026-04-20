@@ -217,14 +217,16 @@ function daysSince(iso) {
   return Math.floor(ms / 86400000);
 }
 
-function lastActivityBadge(iso) {
-  const days = daysSince(iso);
-  if (days === null) return '';
+function lastTestSubmittedBadge(dateStr) {
+  if (!dateStr) return '';
+  const days = daysSince(dateStr);
   let color = '#868e96';
-  if (days >= 14) color = '#c92a2a';
-  else if (days >= 7) color = '#d9480f';
-  const label = days === 0 ? 'today' : days === 1 ? '1 day ago' : `${days} days ago`;
-  return `<span style="font-size:0.72rem;color:${color}" title="Last Lever interaction: ${esc(iso.slice(0,10))}">Last activity: ${label}</span>`;
+  if (days !== null) {
+    if (days >= 14) color = '#c92a2a';
+    else if (days >= 7) color = '#d9480f';
+  }
+  const relative = days === null ? '' : days === 0 ? ' (today)' : days === 1 ? ' (1d ago)' : ` (${days}d ago)`;
+  return `<span style="font-size:0.72rem;color:${color}">Last test submitted: ${esc(dateStr)}${relative}</span>`;
 }
 
 function linkPill(url) {
@@ -597,10 +599,10 @@ async function loadPacket() {
 
     const leverLink = c.lever_id ? `<a href="${leverUrl}" target="_blank" class="link-pill" onclick="event.stopPropagation()">Lever</a>` : '--';
 
-    const lastActHtml = lastActivityBadge(c.last_interaction_at);
+    const lastTestHtml = lastTestSubmittedBadge(c.last_test_submitted);
     html += `<div class="card" id="card-${c.id}">
       <div class="card-summary" onclick="toggleCard('${c.id}')">
-        <div class="name-col"><div class="name">${esc(c.name)}<span id="dtag-${c.id}">${decTag}</span></div><div class="role">${esc(c.role||'')}${c.stream_preference ? ' · <span style="color:#364fc7">'+esc(c.stream_preference).replace(/evals/g,'').replace(/, /g,' · ').trim()+'</span>' : ''}${lastActHtml ? ' · ' + lastActHtml : ''}</div></div>
+        <div class="name-col"><div class="name">${esc(c.name)}<span id="dtag-${c.id}">${decTag}</span></div><div class="role">${esc(c.role||'')}${c.stream_preference ? ' · <span style="color:#364fc7">'+esc(c.stream_preference).replace(/evals/g,'').replace(/, /g,' · ').trim()+'</span>' : ''}${lastTestHtml ? ' · ' + lastTestHtml : ''}</div></div>
         <div class="cs-col">${csBadge(c.codesignal)}</div>
         <div class="tests-col">${testBadges}</div>
         <div class="clout-col">${cloutSummary}</div>
