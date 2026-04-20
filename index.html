@@ -146,11 +146,11 @@
 
 <div class="footer-bar">
   <div>
-    <span class="pending" id="pending-label">0 decisions pending</span>
+    <span class="pending" id="pending-label">0 pending</span>
     <span class="submit-ok" id="submit-status"></span>
   </div>
   <div>
-    <button class="submit-btn" id="submit-btn" disabled onclick="submitDecisions()">Submit Decisions</button>
+    <button class="submit-btn" id="submit-btn" disabled onclick="submitDecisions()">Submit All</button>
     <button class="clear-btn" onclick="clearAll()">Clear</button>
   </div>
 </div>
@@ -207,6 +207,24 @@ function csBadge(cs) {
   const num = parseInt(cs);
   const cls = num >= 580 ? 'cs-green' : num >= 500 ? 'cs-yellow' : 'cs-red';
   return `<span class="${cls}">${esc(cs)}</span>`;
+}
+
+function daysSince(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (isNaN(d)) return null;
+  const ms = Date.now() - d.getTime();
+  return Math.floor(ms / 86400000);
+}
+
+function lastActivityBadge(iso) {
+  const days = daysSince(iso);
+  if (days === null) return '';
+  let color = '#868e96';
+  if (days >= 14) color = '#c92a2a';
+  else if (days >= 7) color = '#d9480f';
+  const label = days === 0 ? 'today' : days === 1 ? '1 day ago' : `${days} days ago`;
+  return `<span style="font-size:0.72rem;color:${color}" title="Last Lever interaction: ${esc(iso.slice(0,10))}">Last activity: ${label}</span>`;
 }
 
 function linkPill(url) {
@@ -279,13 +297,21 @@ function decide(candId, decision, name, e) {
 
 function updateDecisionNote(candId) {
   const ta = document.getElementById(`note-input-${candId}`);
-  if (ta && decisions[candId]) decisions[candId].notes = ta.value;
+  if (!ta) return;
+  if (!decisions[candId]) {
+    const cand = candidatesData.find(c => c.id === candId);
+    decisions[candId] = { decision: null, name: cand?.name || '', notes: ta.value };
+  } else {
+    decisions[candId].notes = ta.value;
+  }
+  updateFooter();
 }
 
 function updateFooter() {
-  const count = Object.keys(decisions).length;
+  const entries = Object.entries(decisions);
+  const count = entries.filter(([, d]) => d.decision || (d.notes && d.notes.trim())).length;
   const label = document.getElementById('pending-label');
-  label.textContent = count === 0 ? '0 decisions pending' : `${count} decision${count>1?'s':''} pending`;
+  label.textContent = count === 0 ? '0 pending' : `${count} pending`;
   label.classList.toggle('has-decisions', count > 0);
   document.getElementById('submit-btn').disabled = count === 0;
   document.getElementById('submit-status').textContent = '';
@@ -293,8 +319,8 @@ function updateFooter() {
 
 async function submitOne(candId, e) {
   if (e) e.stopPropagation();
-  if (!decisions[candId]) return;
   const d = decisions[candId];
+  if (!d || (!d.decision && !(d.notes && d.notes.trim()))) return;
   const packetId = candidatesData[0]?.packet_id;
   const cand = candidatesData.find(c => c.id === candId);
   const statusEl = document.getElementById(`submit-one-status-${candId}`);
@@ -345,7 +371,7 @@ async function submitOne(candId, e) {
 }
 
 async function submitDecisions() {
-  const entries = Object.entries(decisions);
+  const entries = Object.entries(decisions).filter(([, d]) => d.decision || (d.notes && d.notes.trim()));
   if (!entries.length) return;
   const packetId = candidatesData[0]?.packet_id;
   const statusEl = document.getElementById('submit-status');
@@ -483,10 +509,12 @@ async function loadPacket() {
     if (c.tier === 0) {
       if (ed) {
         const edColors = {interview:'decided-interview',reject:'decided-reject',hold:'decided-hold'};
-        actionHtml = `<button class="action-trigger decided ${edColors[ed]}" onclick="toggleAction('${c.id}',event)">${ed.toUpperCase()}</button>`;
+        actionHtml = `<span class="action-trigger decided ${edColors[ed]}">${ed.toUpperCase()}</span>`;
         decisions[c.id] = { decision: ed, name: c.name, notes: existingDec?.notes || '' };
+      } else if (existingDec?.notes) {
+        actionHtml = `<span class="waiting-label" style="color:#364fc7">Note saved</span>`;
       } else {
-        actionHtml = `<button class="action-trigger" onclick="toggleAction('${c.id}',event)">Take Action</button>`;
+        actionHtml = `<span class="waiting-label">Decide / note</span>`;
       }
     } else if (c.tier === 1) {
       actionHtml = '<span class="waiting-label">Needs grading</span>';
@@ -527,13 +555,16 @@ async function loadPacket() {
       detailHtml += `<div class="lever-notes"><div class="ln-label">Lever Notes</div>${esc(c.lever_notes)}</div>`;
     }
 
-    // Action panel (only tier 0)
+    // Action panel (only tier 0) — always visible so notes are immediately accessible
     let actionPanelHtml = '';
     if (c.tier === 0) {
       const existingNote = existingDec?.notes || '';
-      const panelVisible = existingDec ? 'visible' : '';
+      // Seed decisions map with any existing note so updateFooter + submit pick it up
+      if (existingNote) {
+        decisions[c.id] = { decision: ed || null, name: c.name, notes: existingNote };
+      }
       const safeName = esc(c.name).replace(/'/g,"\\'");
-      actionPanelHtml = `<div class="action-panel ${panelVisible}" id="action-panel-${c.id}">
+      actionPanelHtml = `<div class="action-panel visible" id="action-panel-${c.id}">
         <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:10px">
           <div>
             <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.04em;color:#868e96;margin-bottom:4px;font-weight:600">Decision</div>
@@ -554,7 +585,7 @@ async function loadPacket() {
           </div>
         </div>
         <div style="display:flex;gap:8px;align-items:flex-start;margin-top:2px">
-          <textarea id="note-input-${c.id}" style="flex:1;padding:8px;border:1px solid #dee2e6;border-radius:6px;font-size:0.82rem;font-family:inherit;resize:vertical;min-height:36px" placeholder="Note for Vaishnav (e.g., 'schedule interview with Nate', 'send DS + Mon tests')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea>
+          <textarea id="note-input-${c.id}" style="flex:1;padding:8px;border:1px solid #dee2e6;border-radius:6px;font-size:0.82rem;font-family:inherit;resize:vertical;min-height:36px" placeholder="Leave a note for Vaishnav — decision optional (e.g., 'waiting on Neev', 'schedule with Nate', 'send DS + Mon')" oninput="updateDecisionNote('${c.id}')">${esc(existingNote)}</textarea>
           <button class="submit-btn" style="white-space:nowrap;margin-top:0" onclick="submitOne('${c.id}',event)" id="submit-one-${c.id}">Submit</button>
         </div>
         <div style="font-size:0.72rem;color:#adb5bd;margin-top:4px;display:flex;justify-content:space-between">
@@ -566,9 +597,10 @@ async function loadPacket() {
 
     const leverLink = c.lever_id ? `<a href="${leverUrl}" target="_blank" class="link-pill" onclick="event.stopPropagation()">Lever</a>` : '--';
 
+    const lastActHtml = lastActivityBadge(c.last_interaction_at);
     html += `<div class="card" id="card-${c.id}">
       <div class="card-summary" onclick="toggleCard('${c.id}')">
-        <div class="name-col"><div class="name">${esc(c.name)}<span id="dtag-${c.id}">${decTag}</span></div><div class="role">${esc(c.role||'')}${c.stream_preference ? ' · <span style="color:#364fc7">'+esc(c.stream_preference).replace(/evals/g,'').replace(/, /g,' · ').trim()+'</span>' : ''}</div></div>
+        <div class="name-col"><div class="name">${esc(c.name)}<span id="dtag-${c.id}">${decTag}</span></div><div class="role">${esc(c.role||'')}${c.stream_preference ? ' · <span style="color:#364fc7">'+esc(c.stream_preference).replace(/evals/g,'').replace(/, /g,' · ').trim()+'</span>' : ''}${lastActHtml ? ' · ' + lastActHtml : ''}</div></div>
         <div class="cs-col">${csBadge(c.codesignal)}</div>
         <div class="tests-col">${testBadges}</div>
         <div class="clout-col">${cloutSummary}</div>
