@@ -34,7 +34,7 @@
   .card-summary .name-col .role { font-size: 0.75rem; color: #868e96; }
   .card-summary .cs-col { flex: 0.5; text-align: center; }
   .card-summary .tests-col { flex: 1.5; font-size: 0.82rem; }
-  .card-summary .clout-col { flex: 2.5; font-size: 0.78rem; color: #495057; line-height: 1.3; overflow: hidden; max-height: 3.9em; }
+  .card-summary .clout-col { flex: 2.5; font-size: 0.78rem; color: #495057; line-height: 1.3; word-wrap: break-word; overflow-wrap: break-word; }
   .card-summary .lever-col { flex: 0.4; text-align: center; }
   .card-summary .action-col { flex: 1; display: flex; justify-content: flex-end; align-items: center; }
 
@@ -529,7 +529,7 @@ async function loadPacket() {
     // Clout notes — only show "Note to Rae" from Lever, nothing else
     let cloutSummary = '';
     if (c.clout_note) {
-      cloutSummary = esc(c.clout_note.slice(0, 150)) + (c.clout_note.length > 150 ? '...' : '');
+      cloutSummary = esc(c.clout_note);
     } else {
       cloutSummary = '<span style="color:#adb5bd">\u2014</span>';
     }
