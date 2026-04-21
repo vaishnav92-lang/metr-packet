@@ -136,41 +136,74 @@
     <div class="meta" id="subtitle">Loading...</div>
   </div>
   <div class="meta" id="counts"></div>
+  <div class="meta" id="user-info" style="margin-left:auto"></div>
 </div>
 
-<div class="stats" id="stats-bar"></div>
-
-<div class="container" id="main">
-  <div class="loading">Loading packet data...</div>
+<!-- Login gate -->
+<div id="auth-gate" style="display:none;max-width:440px;margin:80px auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.05);text-align:center">
+  <h2 style="margin:0 0 8px;font-size:1.2rem">Sign in to view packet</h2>
+  <div style="color:#868e96;font-size:0.9rem;margin-bottom:24px">Access restricted to authorized METR staff.</div>
+  <form id="login-form" onsubmit="requestMagicLink(event)" style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <input id="login-email" type="email" placeholder="you@metr.org" required style="padding:10px 14px;border:1px solid #dee2e6;border-radius:8px;font-size:0.9rem;width:240px">
+    <button type="submit" class="submit-btn" style="padding:10px 20px">Email me a sign-in link</button>
+  </form>
+  <div id="login-status" style="margin-top:16px;font-size:0.85rem;color:#495057"></div>
 </div>
 
-<div class="footer-bar">
-  <div>
-    <span class="pending" id="pending-label">0 pending</span>
-    <span class="submit-ok" id="submit-status"></span>
+<!-- Access denied -->
+<div id="access-denied" style="display:none;max-width:440px;margin:80px auto;background:#fff;border-radius:12px;padding:32px;box-shadow:0 2px 8px rgba(0,0,0,0.05);text-align:center">
+  <h2 style="margin:0 0 8px;font-size:1.2rem;color:#c92a2a">Access denied</h2>
+  <div id="access-denied-email" style="color:#868e96;font-size:0.9rem;margin-bottom:20px"></div>
+  <div style="color:#495057;font-size:0.85rem;margin-bottom:20px">This packet is restricted to authorized METR staff. If you believe you should have access, contact Vaishnav.</div>
+  <button class="clear-btn" onclick="signOut()" style="color:#495057;border-color:#dee2e6">Sign out</button>
+</div>
+
+<div id="app-content" style="display:none">
+  <div class="stats" id="stats-bar"></div>
+
+  <div class="container" id="main">
+    <div class="loading">Loading packet data...</div>
   </div>
-  <div>
-    <button class="submit-btn" id="submit-btn" disabled onclick="submitDecisions()">Submit All</button>
-    <button class="clear-btn" onclick="clearAll()">Clear</button>
+
+  <div class="footer-bar">
+    <div>
+      <span class="pending" id="pending-label">0 pending</span>
+      <span class="submit-ok" id="submit-status"></span>
+    </div>
+    <div>
+      <button class="submit-btn" id="submit-btn" disabled onclick="submitDecisions()">Submit All</button>
+      <button class="clear-btn" onclick="clearAll()">Clear</button>
+    </div>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script>
 const SUPABASE_URL = 'https://hzpgmmgsjcwyxraitvnt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_ba1lsjKp4HndXWBW5yKZAw_8drosOc0';
+const ALLOWED_EMAILS = ['vaishnav.sunil@metr.org', 'rae@metr.org'];
+
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let authSession = null;
+let currentUserEmail = null;
 
 const decisions = {};
 let candidatesData = [];
 
+function authHeaders() {
+  const token = authSession?.access_token || SUPABASE_KEY;
+  return { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${token}` };
+}
 async function query(table, params = '') {
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    headers: authHeaders()
   });
   return resp.json();
 }
 async function insert(table, data) {
   const resp = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
-    method: 'POST', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+    method: 'POST', headers: { ...authHeaders(),
       'Content-Type': 'application/json', 'Prefer': 'return=representation' },
     body: JSON.stringify(data)
   });
@@ -178,7 +211,7 @@ async function insert(table, data) {
 }
 async function del(table, params) {
   return fetch(`${SUPABASE_URL}/rest/v1/${table}?${params}`, {
-    method: 'DELETE', headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+    method: 'DELETE', headers: authHeaders()
   });
 }
 
@@ -335,8 +368,7 @@ async function submitOne(candId, e) {
     // Soft-delete existing active decision
     await fetch(`${SUPABASE_URL}/rest/v1/decisions?candidate_id=eq.${candId}&packet_id=eq.${packetId}&deleted_at=is.null`, {
       method: 'PATCH',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-        'Content-Type': 'application/json' },
+      headers: { ...authHeaders(), 'Content-Type': 'application/json' },
       body: JSON.stringify({ deleted_at: new Date().toISOString() })
     });
 
@@ -345,13 +377,13 @@ async function submitOne(candId, e) {
       candidate_id: candId,
       packet_id: packetId,
       decision: d.decision,
-      decided_by: 'rae@metr.org',
+      decided_by: currentUserEmail,
       notes: d.notes || null
     };
 
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/decisions`, {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+      headers: { ...authHeaders(),
         'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(row)
     });
@@ -385,8 +417,7 @@ async function submitDecisions() {
     for (const [candId] of entries) {
       await fetch(`${SUPABASE_URL}/rest/v1/decisions?candidate_id=eq.${candId}&packet_id=eq.${packetId}&deleted_at=is.null`, {
         method: 'PATCH',
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
-          'Content-Type': 'application/json' },
+        headers: { ...authHeaders(), 'Content-Type': 'application/json' },
         body: JSON.stringify({ deleted_at: new Date().toISOString() })
       });
     }
@@ -399,14 +430,14 @@ async function submitDecisions() {
         candidate_id: candId,
         packet_id: packetId,
         decision: d.decision,
-        decided_by: 'rae@metr.org',
+        decided_by: currentUserEmail,
         notes: d.notes || null
       };
     });
 
     const resp = await fetch(`${SUPABASE_URL}/rest/v1/decisions`, {
       method: 'POST',
-      headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+      headers: { ...authHeaders(),
         'Content-Type': 'application/json', 'Prefer': 'return=representation' },
       body: JSON.stringify(rows)
     });
@@ -618,7 +649,95 @@ async function loadPacket() {
   if (Object.keys(decisions).length) updateFooter();
 }
 
-loadPacket();
+// === Auth flow ===
+
+function showLoginGate() {
+  document.getElementById('auth-gate').style.display = 'block';
+  document.getElementById('access-denied').style.display = 'none';
+  document.getElementById('app-content').style.display = 'none';
+  document.querySelector('.footer-bar')?.style.setProperty('display', 'none');
+  document.getElementById('user-info').innerHTML = '';
+}
+
+function showAccessDenied(email) {
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('access-denied').style.display = 'block';
+  document.getElementById('app-content').style.display = 'none';
+  document.getElementById('access-denied-email').textContent = `Signed in as ${email} — not authorized.`;
+  document.getElementById('user-info').innerHTML = '';
+}
+
+function showApp(email) {
+  document.getElementById('auth-gate').style.display = 'none';
+  document.getElementById('access-denied').style.display = 'none';
+  document.getElementById('app-content').style.display = 'block';
+  document.getElementById('user-info').innerHTML = `${esc(email)} \u00b7 <a href="#" onclick="signOut();return false;" style="color:#adb5bd">Sign out</a>`;
+}
+
+async function requestMagicLink(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim().toLowerCase();
+  const status = document.getElementById('login-status');
+  if (!ALLOWED_EMAILS.includes(email)) {
+    status.textContent = 'That email is not authorized.';
+    status.style.color = '#c92a2a';
+    return;
+  }
+  status.textContent = 'Sending sign-in link...';
+  status.style.color = '#868e96';
+  const { error } = await sb.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: window.location.origin + window.location.pathname }
+  });
+  if (error) {
+    status.textContent = 'Error: ' + error.message;
+    status.style.color = '#c92a2a';
+  } else {
+    status.textContent = `Check your inbox at ${email}. Click the link to sign in.`;
+    status.style.color = '#2b8a3e';
+  }
+}
+
+async function signOut() {
+  await sb.auth.signOut();
+  authSession = null;
+  currentUserEmail = null;
+  showLoginGate();
+}
+
+async function initAuth() {
+  const { data: { session } } = await sb.auth.getSession();
+  if (!session) {
+    showLoginGate();
+    return;
+  }
+  authSession = session;
+  const email = (session.user?.email || '').toLowerCase();
+  currentUserEmail = email;
+  if (!ALLOWED_EMAILS.includes(email)) {
+    showAccessDenied(email);
+    return;
+  }
+  showApp(email);
+  loadPacket();
+}
+
+// React to auth state changes (e.g., after magic link click)
+sb.auth.onAuthStateChange((_event, session) => {
+  if (session && session.user?.email) {
+    const email = session.user.email.toLowerCase();
+    authSession = session;
+    currentUserEmail = email;
+    if (!ALLOWED_EMAILS.includes(email)) {
+      showAccessDenied(email);
+    } else if (document.getElementById('app-content').style.display !== 'block') {
+      showApp(email);
+      loadPacket();
+    }
+  }
+});
+
+initAuth();
 </script>
 </body>
 </html>
